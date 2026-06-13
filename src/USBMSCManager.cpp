@@ -76,9 +76,9 @@ bool USBMSCManager::Init(
     m_sd = sd;
     Serial.printf("Sectors: %lu\n",
                   sd->card()->sectorCount());
-    msc.vendorID("ESP32");
-    msc.productID("SDCARD");
-    msc.productRevision("1.0");
+    msc.vendorID("ESP32S3 ");
+    msc.productID("SD Card Reader ");
+    msc.productRevision("1.00");
 
     msc.onRead(onRead);
     msc.onWrite(onWrite);
