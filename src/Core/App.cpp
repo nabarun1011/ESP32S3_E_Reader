@@ -1,6 +1,10 @@
 #include "Core/App.hpp"
 
-static const String TAG = "App";
+static const char* TAG = "App";
+
+App::App() : m_storage(), m_library(m_storage), m_display()
+{
+}
 
 bool App::Init()
 {
@@ -10,11 +14,21 @@ bool App::Init()
         return false;
     }
 
-    Serial.printf("%s : Root Exists: %s\n", TAG, m_storage.Exists("/") ? "true" : "false");
+    m_library.Scan();
+    const auto &books =
+        m_library.GetBooks();
+    Serial.printf("%s : Get books\n", TAG);
+    Serial.printf(
+        "Books found: %u\n",
+        books.size());
 
-    Serial.printf("%s : Root dir: %s\n", TAG, m_storage.IsDirectory("/")? "true" : "false");
-
-    Serial.printf("%s : boot size: %u\n", TAG, m_storage.FileSize("/Test.txt"));
+    for (const auto &book : books)
+    {
+        Serial.printf(
+            "%s (%s)\n",
+            book.title.c_str(),
+            book.extension.c_str());
+    }
 
     if (!m_display.Init())
     {

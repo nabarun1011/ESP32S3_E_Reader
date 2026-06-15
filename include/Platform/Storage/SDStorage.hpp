@@ -6,7 +6,7 @@
 class SDStorage : public IStorage
 {
 private:
-    SdFat32 m_sd;
+    SdFs m_sd;
     SPIClass m_spi{FSPI};
 
 public:
@@ -19,4 +19,6 @@ public:
     size_t FileSize(const String &path) override;
 
     IFile *Open(const String &path) override;
+
+    std::vector<DirectoryEntry> ListDirectory(const String &path) override;
 };

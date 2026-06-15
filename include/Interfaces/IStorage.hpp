@@ -2,6 +2,8 @@
 
 #include <Arduino.h>
 #include "Interfaces/IFile.hpp"
+#include "vector"
+#include "DirectoryEntry.hpp"
 
 class IStorage
 {
@@ -17,4 +19,6 @@ public:
     virtual size_t FileSize(const String &path) = 0;
 
     virtual IFile *Open(const String &path) = 0;
+
+    virtual std::vector<DirectoryEntry> ListDirectory(const String &path) = 0;
 };

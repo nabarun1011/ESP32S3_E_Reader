@@ -1,5 +1,5 @@
 #include "Platform/Storage/SDStorage.hpp"
-#include "Core/Config.hpp" 
+#include "Core/Config.hpp"
 #include "Platform/Storage/SDFile.hpp"
 
 static const String TAG = "SDStorage";
@@ -83,4 +83,57 @@ IFile *SDStorage::Open(
 
     return new SDFile(
         std::move(file));
+}
+
+std::vector<DirectoryEntry> SDStorage::ListDirectory(
+    const String &path)
+{
+    std::vector<DirectoryEntry> entries;
+
+    FsFile dir;
+
+    if (!dir.open(
+            path.c_str(),
+            O_RDONLY))
+    {
+        return entries;
+    }
+
+    FsFile file;
+
+    while (file.openNext(
+        &dir,
+        O_RDONLY))
+    {
+        DirectoryEntry entry;
+
+        char name[128];
+
+        file.getName(
+            name,
+            sizeof(name));
+
+        entry.name = name;
+
+        if (path == "/")
+        {
+            entry.path = "/" + entry.name;
+        }
+        else
+        {
+            entry.path = path + "/" + entry.name;
+        }
+
+        entry.isDirectory = file.isDirectory();
+
+        entry.size = file.size();
+
+        entries.push_back(entry);
+
+        file.close();
+    }
+
+    dir.close();
+
+    return entries;
 }
