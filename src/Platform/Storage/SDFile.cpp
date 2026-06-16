@@ -6,10 +6,11 @@ SDFile::SDFile(
 {
 }
 
-bool SDFile::IsOpen() 
+bool SDFile::IsOpen() const
 {
     return m_file.isOpen();
 }
+
 
 size_t SDFile::Read(
     void *buffer,
@@ -26,7 +27,7 @@ bool SDFile::Seek(
     return m_file.seek(position);
 }
 
-uint32_t SDFile::Position() 
+uint32_t SDFile::Position() const
 {
     return m_file.curPosition();
 }

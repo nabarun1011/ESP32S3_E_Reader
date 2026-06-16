@@ -1,9 +1,22 @@
 #pragma once
 
+#include <Arduino.h>
+#include <functional>
+
 class IDisplay
 {
 public:
+    virtual void Render(const std::function<void()> &drawFunc) = 0;
+
     virtual ~IDisplay() = default;
+
+    virtual int Width() const = 0;
+    virtual int Height() const = 0;
+
     virtual bool Init() = 0;
-    virtual void Clear() = 0;
+
+    virtual void DrawText(
+        int x,
+        int y,
+        const String &text) = 0;
 };

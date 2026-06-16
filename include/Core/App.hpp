@@ -1,8 +1,12 @@
 #pragma once
 
 #include "Platform/Storage/SDStorage.hpp"
-#include "Platform/Display/DisplayManager.hpp"
+#include "Platform/Display/EPDDisplay.hpp"
 #include "Domain/Library/LibraryScanner.hpp"
+#include "UI/ScreenManager.hpp"
+#include "UI/Screens/LibraryScreen.hpp"
+#include "UI/Screens/ReaderScreen.hpp"
+#include "Domain/Reader/TextDocument.hpp"
 
 class App
 {
@@ -11,14 +15,17 @@ private:
 
     LibraryScanner m_library;
 
-    DisplayManager m_display;
+    EPDDisplay m_display;
+
+    ScreenManager m_screenManager;
+
+    LibraryScreen m_libraryScreen;
+
+    TextDocument m_document;
+    ReaderScreen m_readerScreen;
 
 public:
     App();
     bool Init();
     void Update();
-    // void ChangeState(AppState newState);
-    // void HandleInput(InputAction action);
-    // void ReadButtonPresses();
-    // void RenderCurrentScreen();
 };

@@ -7,7 +7,7 @@ class IFile
 public:
     virtual ~IFile() = default;
 
-    virtual bool IsOpen() = 0;
+    virtual bool IsOpen() const = 0;
 
     virtual size_t Read(
         void *buffer,
@@ -16,7 +16,7 @@ public:
     virtual bool Seek(
         uint32_t position) = 0;
 
-    virtual uint32_t Position() = 0;
+    virtual uint32_t Position() const = 0;
 
     virtual uint32_t Size() = 0;
 

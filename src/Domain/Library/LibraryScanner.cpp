@@ -1,6 +1,6 @@
 #include "Domain/Library/LibraryScanner.hpp"
 
-static const char* TAG = "LibraryScanner";
+static const char *TAG = "LibraryScanner";
 
 LibraryScanner::LibraryScanner(
     IStorage &storage)
@@ -8,7 +8,7 @@ LibraryScanner::LibraryScanner(
 {
 }
 
-//Check if file is supported
+// Check if file is supported
 static bool IsSupportedBook(
     const String &filename)
 {
@@ -30,15 +30,16 @@ bool LibraryScanner::Scan()
     return true;
 }
 
-//Scan directory for books
+// Scan directory for books
 void LibraryScanner::ScanDirectory(
     const String &path)
 {
+    Serial.printf("%s : Scanning directory: %s\n", TAG, path.c_str());
     auto entries = m_storage.ListDirectory(path);
 
     for (const auto &entry : entries)
     {
-        
+        // Serial.printf("%s : Found file/dir: %s\n", TAG, entry.name.c_str());
         if (entry.isDirectory)
         {
             if (entry.path == "/System Volume Information")
@@ -72,6 +73,7 @@ void LibraryScanner::ScanDirectory(
             book.title = book.title.substring(0, dot);
         }
 
+        Serial.printf("%s : Found book: %s\n", TAG, book.title.c_str());
         m_books.push_back(book);
     }
 }

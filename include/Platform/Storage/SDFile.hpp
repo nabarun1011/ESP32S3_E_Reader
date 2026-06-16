@@ -10,7 +10,7 @@ public:
     explicit SDFile(
         FsFile &&file);
 
-    bool IsOpen() override;
+    bool IsOpen() const override;
 
     size_t Read(
         void *buffer,
@@ -19,7 +19,7 @@ public:
     bool Seek(
         uint32_t position) override;
 
-    uint32_t Position() override;
+    uint32_t Position() const override;
 
     uint32_t Size() override;
 

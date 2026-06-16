@@ -2,21 +2,26 @@
 #include "Core/Config.hpp"
 #include "Platform/Storage/SDFile.hpp"
 
-static const String TAG = "SDStorage";
+static const char *TAG = "SDStorage";
+
+SDStorage::SDStorage()
+{
+}
 
 bool SDStorage::Init()
 {
-    m_spi.begin(
-        Config::SPI_CLK,
-        Config::SPI_MISO,
-        Config::SPI_MOSI,
-        Config::SD_CS);
+    // m_spi.begin(
+    //     Config::SPI_CLK,
+    //     Config::SPI_MISO,
+    //     Config::SPI_MOSI,
+    //     Config::SD_CS);
 
+    Serial.printf("%s : SD init\n", TAG);
     SdSpiConfig sdConfig(
         Config::SD_CS,
         SHARED_SPI,
         SD_SCK_MHZ(40),
-        &m_spi);
+        &SPI);
 
     if (!m_sd.begin(sdConfig))
     {
@@ -69,7 +74,7 @@ size_t SDStorage::FileSize(const String &path)
     return size;
 }
 
-IFile *SDStorage::Open(
+std::unique_ptr<IFile> SDStorage::Open(
     const String &path)
 {
     FsFile file;
@@ -81,8 +86,7 @@ IFile *SDStorage::Open(
         return nullptr;
     }
 
-    return new SDFile(
-        std::move(file));
+    return std::make_unique<SDFile>(std::move(file));
 }
 
 std::vector<DirectoryEntry> SDStorage::ListDirectory(
@@ -96,6 +100,7 @@ std::vector<DirectoryEntry> SDStorage::ListDirectory(
             path.c_str(),
             O_RDONLY))
     {
+        Serial.printf("%s :Failed to open directory: %s\n", TAG, path.c_str());
         return entries;
     }
 
@@ -128,6 +133,7 @@ std::vector<DirectoryEntry> SDStorage::ListDirectory(
 
         entry.size = file.size();
 
+        // Serial.printf("%s :Found file: %s\n", TAG, entry.name.c_str());
         entries.push_back(entry);
 
         file.close();
