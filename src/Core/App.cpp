@@ -42,7 +42,7 @@ bool App::Init()
 
     auto file =
         m_storage.Open(
-            "/Test.txt");
+            "/Tattva_Bodha_Readable_English_Translation.txt");
 
     m_document.Open(move(file));
 

@@ -28,6 +28,10 @@ public:
         char *buffer,
         size_t size);
 
+    bool ReadPage(
+        char *buffer,
+        size_t maxSize);
+
 private:
     std::unique_ptr<IFile> m_file;
 };

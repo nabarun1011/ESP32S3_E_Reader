@@ -13,6 +13,10 @@ public:
     virtual int Width() const = 0;
     virtual int Height() const = 0;
 
+    virtual int LineHeight() const = 0;
+
+    virtual int MeasureTextWidth(const String &text) = 0;
+
     virtual bool Init() = 0;
 
     virtual void DrawText(

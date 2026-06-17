@@ -20,6 +20,10 @@ public:
 
     int Height() const override;
 
+    int LineHeight() const override;
+
+    int MeasureTextWidth(const String &text) override;
+
     bool Init() override;
 
     void DrawText(int x, int y, const String &text) override;
