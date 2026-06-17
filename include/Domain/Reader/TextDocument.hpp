@@ -7,15 +7,16 @@
 #include <memory>
 
 #include "Interfaces/IFile.hpp"
+#include "Interfaces/IDocument.hpp"
 
-class TextDocument
+class TextDocument: public IDocument
 {
 public:
     TextDocument();
 
     bool Open(std::unique_ptr<IFile> file);
 
-    bool IsOpen();
+    bool IsOpen() override;
 
     uint32_t Size();
 
@@ -31,6 +32,8 @@ public:
     bool ReadPage(
         char *buffer,
         size_t maxSize);
+
+    String ReadAll() override;
 
 private:
     std::unique_ptr<IFile> m_file;

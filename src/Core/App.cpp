@@ -8,7 +8,8 @@ GxEPD2_BW<GxEPD2_420_GDEY042T81, GxEPD2_420_GDEY042T81::HEIGHT>
     display(GxEPD2_420_GDEY042T81(Config::Display_CS, Config::Display_DC, Config::Display_RST, Config::Display_BUSY));
 
 App::App() : m_storage(), m_library(m_storage), m_display(), m_screenManager(),
-             m_libraryScreen(m_library, m_display), m_document(), m_readerScreen(m_document, m_display)
+             m_libraryScreen(m_library, m_display), m_document(), m_deviceSettings(),
+             m_readerScreen(m_document, m_display, m_deviceSettings)
 {
 }
 

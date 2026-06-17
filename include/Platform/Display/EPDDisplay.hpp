@@ -24,7 +24,11 @@ public:
 
     int MeasureTextWidth(const String &text) override;
 
+    void SetTextSize(int size) override;
+
     bool Init() override;
+
+    void SetRotation(uint8_t rotation) override;
 
     void DrawText(int x, int y, const String &text) override;
 };

@@ -52,3 +52,9 @@ size_t TextDocument::Read(
         buffer,
         size);
 }
+
+String TextDocument::ReadAll()
+{
+    // temporary implementation
+    return "";
+}

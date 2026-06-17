@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Interfaces/IDisplay.hpp"
+#include "Domain/Reader/Page.hpp"
 
 class TextRenderer
 {
@@ -8,12 +9,11 @@ public:
     explicit TextRenderer(
         IDisplay &display);
 
-    void DrawTextBlock(
-        int x,
-        int y,
-        const String &text);
-
     size_t MaxVisibleLines() const;
+
+    Page BuildPage(const String &text, size_t startLine);
+
+    void DrawPage(int x, int y, const Page &page);
 
 private:
     std::vector<String> WrapText(

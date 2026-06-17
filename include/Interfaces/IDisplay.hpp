@@ -19,6 +19,10 @@ public:
 
     virtual bool Init() = 0;
 
+    virtual void SetTextSize(int size) = 0;
+
+    virtual void SetRotation(uint8_t rotation) = 0;
+
     virtual void DrawText(
         int x,
         int y,

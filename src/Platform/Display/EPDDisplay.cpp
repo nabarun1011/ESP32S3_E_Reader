@@ -69,6 +69,19 @@ int EPDDisplay::MeasureTextWidth(
     return w;
 }
 
+void EPDDisplay::SetTextSize(
+    int size)
+{
+    m_display.setTextSize(
+        size);
+}
+
+void EPDDisplay::SetRotation(
+    uint8_t rotation)
+{
+    m_display.setRotation(rotation);
+}
+
 void EPDDisplay::DrawText(
     int x,
     int y,

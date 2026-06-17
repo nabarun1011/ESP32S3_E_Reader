@@ -8,29 +8,23 @@ TextRenderer::TextRenderer(
 
 size_t TextRenderer::MaxVisibleLines() const
 {
-    Serial.printf(
-        "Lines/Page = %u\n",
-        m_renderer.MaxVisibleLines());
     return m_display.Height() /
            m_display.LineHeight();
 }
 
-void TextRenderer::DrawTextBlock(
-    int x,
-    int y,
-    const String &text)
+Page TextRenderer::BuildPage(
+    const String &text,
+    size_t startLine)
 {
-    const int lineHeight =
-        m_display.LineHeight();
+    Page page;
 
     String normalized = text;
 
     normalized.replace("\r\n", "\n");
     normalized.replace('\r', '\n');
 
-    int currentY = y;
-
     int start = 0;
+    size_t currentLine = 0;
 
     while (start < normalized.length())
     {
@@ -52,26 +46,65 @@ void TextRenderer::DrawTextBlock(
         auto wrapped =
             WrapText(
                 paragraph,
-                m_display.Width() - x - 10);
+                m_display.Width() - 20);
 
         if (wrapped.empty())
         {
-            currentY += lineHeight;
+            if (currentLine >= startLine)
+            {
+                if (page.Lines.size() >= MaxVisibleLines())
+                {
+                    page.NextPageStartLine = currentLine;
+                    return page;
+                }
+
+                page.Lines.push_back("");
+            }
+
+            currentLine++;
         }
         else
         {
+            //Iterate throught wrapped paragraph lines
             for (const auto &line : wrapped)
             {
-                m_display.DrawText(
-                    x,
-                    currentY,
-                    line);
+                if (currentLine >= startLine)
+                {
+                    if (page.Lines.size() >= MaxVisibleLines())
+                    {
+                        page.NextPageStartLine = currentLine;
+                        return page;
+                    }
 
-                currentY += lineHeight;
+                    page.Lines.push_back(line);
+                }
+
+                currentLine++;
             }
         }
 
         start = end + 1;
+    }
+
+    page.NextPageStartLine = currentLine;
+    return page;
+}
+
+void TextRenderer::DrawPage(
+    int x,
+    int y,
+    const Page &page)
+{
+    for (size_t i = 0;
+         i < page.Lines.size();
+         i++)
+    {
+        m_display.DrawText(
+            x,
+            y +
+                i *
+                    m_display.LineHeight(),
+            page.Lines[i]);
     }
 }
 
