@@ -1,12 +1,13 @@
 #pragma once
 
 #include <Arduino.h>
+#include "Domain/Reader/ReaderFont.hpp"
 
 struct BookSettings
 {
-    int FontSize = 16;
+    int FontSize = 1;
 
-    String Font = "Default";
+    ReaderFont Font = ReaderFont::Serif;
 
     size_t LastCharacterOffset = 0;
 };

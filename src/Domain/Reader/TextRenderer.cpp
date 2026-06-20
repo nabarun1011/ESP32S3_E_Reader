@@ -6,15 +6,21 @@ TextRenderer::TextRenderer(
 {
 }
 
-size_t TextRenderer::MaxVisibleLines() const
+void TextRenderer::SetFont(ReaderFont font)
 {
-    return m_display.Height() /
-           m_display.LineHeight();
+    m_font = font;
+}
+
+size_t TextRenderer::MaxVisibleLines(int availableHeight) const
+{
+    return availableHeight /
+           m_display.LineHeight(m_font);
 }
 
 Page TextRenderer::BuildPage(
     const String &text,
-    size_t startLine)
+    size_t startLine,
+    int availableHeight)
 {
     Page page;
 
@@ -52,7 +58,7 @@ Page TextRenderer::BuildPage(
         {
             if (currentLine >= startLine)
             {
-                if (page.Lines.size() >= MaxVisibleLines())
+                if (page.Lines.size() >= MaxVisibleLines(availableHeight))
                 {
                     page.NextPageStartLine = currentLine;
                     return page;
@@ -65,12 +71,12 @@ Page TextRenderer::BuildPage(
         }
         else
         {
-            //Iterate throught wrapped paragraph lines
+            // Iterate throught wrapped paragraph lines
             for (const auto &line : wrapped)
             {
                 if (currentLine >= startLine)
                 {
-                    if (page.Lines.size() >= MaxVisibleLines())
+                    if (page.Lines.size() >= MaxVisibleLines(availableHeight))
                     {
                         page.NextPageStartLine = currentLine;
                         return page;
@@ -103,8 +109,9 @@ void TextRenderer::DrawPage(
             x,
             y +
                 i *
-                    m_display.LineHeight(),
-            page.Lines[i]);
+                    m_display.LineHeight(m_font),
+            page.Lines[i],
+            m_font);
     }
 }
 
@@ -135,7 +142,7 @@ std::vector<String> TextRenderer::WrapText(
                 ? word
                 : currentLine + " " + word;
 
-        if (m_display.MeasureTextWidth(candidate) <= maxWidth)
+        if (m_display.MeasureTextWidth(candidate, m_font) <= maxWidth)
         {
             currentLine = candidate;
         }

@@ -19,7 +19,7 @@ public:
 
     size_t FileSize(const String &path) override;
 
-    std::unique_ptr<IFile> Open(const String &path) override;
+    std::unique_ptr<IFile> Open(const String &path, FileMode mode) override;
 
     std::vector<DirectoryEntry> ListDirectory(const String &path) override;
 };

@@ -1,26 +1,32 @@
 #pragma once
 
-#include "Interfaces/IDisplay.hpp"
 #include "Domain/Reader/TextDocument.hpp"
-#include "Interfaces/IScreen.hpp"
+#include "UI/Screens/BaseScreen.hpp"
 #include "Domain/Reader/TextRenderer.hpp"
 #include "Domain/Settings/BookSettings.hpp"
-#include "Domain/Settings/DeviceSettings.hpp"
+#include "Domain/Settings/ReaderSettings.hpp"
+#include "Domain/Library/BookInfo.hpp"
+#include "Interfaces/IBookSettingsRepository.hpp"
+#include "Interfaces/IStorage.hpp"
 
-class ReaderScreen : public IScreen
+class ReaderScreen : public BaseScreen
 {
 public:
     ReaderScreen(
         TextDocument &document,
         IDisplay &display,
-        DeviceSettings &deviceSettings);
+        DeviceSettings &deviceSettings,
+        IBookSettingsRepository &bookSettingsRepository);
 
     void Enter() override;
     void Exit() override;
-    void Update() override;
-    void Draw() override;
+    void HandleButton(Button button) override;
+    void Refresh() override;
 
-    void ApplyLayoutSettings();
+    void OpenBook(const BookInfo &book);
+
+    void UpdateLayout();
+    void ApplyReaderSettings();
     void RebuildPageIndex();
 
     void NextPage();
@@ -37,6 +43,14 @@ public:
     void MenuRight();
 
 private:
+    struct ReaderLayout
+    {
+        int TextTop = 5;
+        int TextAreaHeight;
+
+        int FooterY;
+        int FooterHeight = 20;
+    };
     enum class State
     {
         Reading,
@@ -54,24 +68,13 @@ private:
 
         Count
     };
-    struct ReaderSettings
-    {
-        String Font = "Default";
-
-        int FontSize = 16;
-
-        size_t CurrentPage = 0;
-
-        size_t GoToPage = 0;
-
-        size_t SelectedMenuItem = 0;
-    };
 
     void DrawOverlayMenu();
 
 private:
     TextDocument &m_document;
-    IDisplay &m_display;
+    IBookSettingsRepository &m_bookSettingsRepository;
+    BookInfo m_currentBook;
     String m_text;
 
     TextRenderer m_renderer;
@@ -80,13 +83,7 @@ private:
 
     State m_state = State::Reading;
 
-    std::vector<String> m_menuItems =
-        {
-            "Resume",
-            "Go To Page",
-            "Library"};
-
+    ReaderLayout m_layout;
     BookSettings m_bookSettings;
     ReaderSettings m_readerSettings;
-    DeviceSettings &m_deviceSettings;
 };

@@ -11,4 +11,6 @@ struct DirectoryEntry
     bool isDirectory;
 
     uint32_t size;
+
+    uint32_t modifiedTime;
 };

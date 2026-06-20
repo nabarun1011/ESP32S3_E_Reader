@@ -12,12 +12,12 @@ public:
 
     bool Scan();
 
-    const std::vector<BookInfo> &GetBooks() const;
+    const std::vector<BookInfo> &GetEntries() const;
 
 private:
     IStorage &m_storage;
 
-    std::vector<BookInfo> m_books;
+    std::vector<BookInfo> m_entries;
 
     void ScanDirectory(const String &path);
 };

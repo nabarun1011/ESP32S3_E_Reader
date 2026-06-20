@@ -9,7 +9,7 @@
 #include "Interfaces/IFile.hpp"
 #include "Interfaces/IDocument.hpp"
 
-class TextDocument: public IDocument
+class TextDocument : public IDocument
 {
 public:
     TextDocument();

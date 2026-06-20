@@ -3,11 +3,12 @@
 ReaderScreen::ReaderScreen(
     TextDocument &document,
     IDisplay &display,
-    DeviceSettings &deviceSettings)
-    : m_document(document),
-      m_display(display),
+    DeviceSettings &deviceSettings,
+    IBookSettingsRepository &bookSettingsRepository)
+    : BaseScreen(deviceSettings, display),
+      m_document(document),
       m_renderer(display),
-      m_deviceSettings(deviceSettings)
+      m_bookSettingsRepository(bookSettingsRepository)
 {
 }
 
@@ -24,15 +25,7 @@ void ReaderScreen::Enter()
 
     m_text = buffer;
 
-    m_readerSettings.FontSize = m_bookSettings.FontSize;
-
-    m_readerSettings.Font = m_bookSettings.Font;    
-
-    // m_readerSettings.CurrentPage = m_bookSettings.LastPage;
-
-    m_readerSettings.GoToPage = m_readerSettings.CurrentPage;
-
-    ApplyLayoutSettings();
+    UpdateLayout();
 
     Serial.printf(
         "Total Pages = %u\n",
@@ -47,23 +40,118 @@ void ReaderScreen::Enter()
     }
 }
 
-void ReaderScreen::ApplyLayoutSettings()
+void ReaderScreen::UpdateLayout()
 {
-    m_display.SetRotation(m_deviceSettings.Orientation);
-    m_display.SetTextSize(m_readerSettings.FontSize);
+    ApplyReaderSettings();
+    // Set footer height based on UI font of page number
+    m_layout.FooterHeight = m_display.LineHeight(m_deviceSettings.UIFont) + 4;
+    m_layout.TextAreaHeight = m_display.Height() - m_layout.FooterHeight;
+    m_layout.FooterY = m_display.Height() - m_layout.FooterHeight;
     RebuildPageIndex();
+}
+
+void ReaderScreen::ApplyReaderSettings()
+{
+    m_readerSettings.GoToPage = m_readerSettings.CurrentPage;
+    m_display.SetRotation(m_deviceSettings.Orientation);
+    m_renderer.SetFont(m_bookSettings.Font);
+    m_display.SetTextSize(m_bookSettings.FontSize);
 }
 
 void ReaderScreen::Exit()
 {
+    m_bookSettingsRepository.Save(
+        m_currentBook.path,
+        m_bookSettings);
 }
 
-void ReaderScreen::Update()
+void ReaderScreen ::OpenBook(const BookInfo &book)
 {
+    m_currentBook = book;
+
+    m_bookSettings =
+        BookSettings();
+
+    m_bookSettingsRepository.Load(
+        book.path,
+        m_bookSettings);
+    Enter();
+}
+
+void ReaderScreen::HandleButton(Button button)
+{
+    bool needRedraw = true;
+    switch (m_state)
+    {
+    case State::Reading:
+        switch (button)
+        {
+        case Button::Up:
+            PreviousPage();
+            break;
+        case Button::Down:
+            NextPage();
+            break;
+        case Button::Left:
+            PreviousPage();
+
+            break;
+        case Button::Right:
+            NextPage();
+
+            break;
+        case Button::Select:
+            ToggleOverlayMenu();
+            break;
+        case Button::Back:
+            // Return to library
+            break;
+        default:
+            break;
+        }
+        break;
+    case State::Menu:
+        switch (button)
+        {
+        case Button::Up:
+            MenuUp();
+
+            break;
+        case Button::Down:
+            MenuDown();
+
+            break;
+        case Button::Left:
+            MenuLeft();
+
+            break;
+        case Button::Right:
+            MenuRight();
+
+            break;
+        case Button::Select:
+            MenuSelect();
+            break;
+        case Button::Back:
+            ToggleOverlayMenu();
+            break;
+        default:
+            break;
+        }
+        break;
+    default:
+        break;
+    }
+
+    if (needRedraw)
+    {
+        Refresh();
+    }
 }
 
 void ReaderScreen::RebuildPageIndex()
 {
+
     m_pageStarts.clear();
 
     m_pageStarts.push_back(0);
@@ -75,7 +163,8 @@ void ReaderScreen::RebuildPageIndex()
         Page page =
             m_renderer.BuildPage(
                 m_text,
-                startLine);
+                startLine,
+                m_layout.TextAreaHeight);
 
         if (page.NextPageStartLine <= startLine)
         {
@@ -92,24 +181,26 @@ void ReaderScreen::RebuildPageIndex()
 
 void ReaderScreen::ToggleOverlayMenu()
 {
-    if (m_state == State::Menu)
-    {
-        m_state = State::Reading;
-    }
-    else
+    if (m_state == State::Reading)
     {
         m_state = State::Menu;
     }
+    else
+    {
+        m_state = State::Reading;
+    }
+    Serial.printf("m_state toggled to= %s\n", m_state == State::Menu ? "Menu" : "Reading");
 }
 
-void ReaderScreen::Draw()
+void ReaderScreen::Refresh()
 {
-    m_display.SetTextSize(m_readerSettings.FontSize);
+    m_display.SetTextSize(m_bookSettings.FontSize);
 
     Page page =
         m_renderer.BuildPage(
             m_text,
-            m_pageStarts[m_readerSettings.CurrentPage]);
+            m_pageStarts[m_readerSettings.CurrentPage],
+            m_layout.TextAreaHeight);
 
     m_display.Render(
         [this, page]()
@@ -123,7 +214,7 @@ void ReaderScreen::Draw()
             m_display.DrawText(
                 10,
                 m_display.Height() - 10,
-                footer);
+                footer, m_deviceSettings.UIFont);
 
             m_renderer.DrawPage(
                 10, 20,
@@ -138,7 +229,38 @@ void ReaderScreen::Draw()
 
 void ReaderScreen::DrawOverlayMenu()
 {
-    int y = 40;
+    const int panelX = 0;
+    const int panelY = 0;
+
+    const int panelW =
+        m_display.Width();
+
+    const int panelH =
+        m_display.Height() / 2;
+
+    m_display.FillRect(
+        panelX,
+        panelY,
+        panelW,
+        panelH);
+
+    m_display.DrawRect(
+        panelX,
+        panelY,
+        panelW,
+        panelH);
+
+    m_display.DrawLine(0,
+                       panelY + 20,
+                       panelW,
+                       panelY + 20);
+
+    m_display.DrawText(
+        10,
+        panelY + 5,
+        "Reader Settings", m_deviceSettings.UIFont);
+
+    int y = panelY + 40;
 
     for (size_t i = 0; i < static_cast<size_t>(OverlayMenuItem::Count); i++)
     {
@@ -147,16 +269,16 @@ void ReaderScreen::DrawOverlayMenu()
         switch (static_cast<OverlayMenuItem>(i))
         {
         case OverlayMenuItem::Font:
-            text = "Font: [Dummy Font]";
+            text = "Font: [" + String(ToString(m_bookSettings.Font)) + "]";
             break;
         case OverlayMenuItem::FontSize:
-            text = "Font Size: [" + String(m_readerSettings.FontSize) + "]";
+            text = "Font Size: [" + String(m_bookSettings.FontSize) + "]";
             break;
         case OverlayMenuItem::Rotation:
             text = "Rotation: [" + String(m_deviceSettings.Orientation) + "]";
             break;
         case OverlayMenuItem::GoToPage:
-            text = "Go To Page: [%u/%u]", m_readerSettings.CurrentPage, m_pageStarts.size() - 1;
+            text = "Go To Page: [" + String(m_readerSettings.GoToPage) + "/%" + String(m_pageStarts.size() - 1) + "]";
             break;
         case OverlayMenuItem::Library:
             text = "Library";
@@ -176,9 +298,9 @@ void ReaderScreen::DrawOverlayMenu()
         m_display.DrawText(
             20,
             y,
-            text);
+            text, m_deviceSettings.UIFont);
 
-        y += 30;
+        y += m_display.LineHeight(m_deviceSettings.UIFont) + 4;
     }
 }
 
@@ -204,13 +326,25 @@ void ReaderScreen::MenuLeft()
         static_cast<OverlayMenuItem>(
             m_readerSettings.SelectedMenuItem))
     {
+    case OverlayMenuItem::Font:
+    {
+        int prevFontIndex = static_cast<int>(m_bookSettings.Font) - 1;
+        // If index less than 0, then set font index to last index
+        if (prevFontIndex < 0)
+        {
+            prevFontIndex = static_cast<int>(ReaderFont::Count) - 1;
+        }
+        m_bookSettings.Font = static_cast<ReaderFont>(prevFontIndex);
+        UpdateLayout();
+        break;
+    }
     case OverlayMenuItem::FontSize:
 
-        if (m_readerSettings.FontSize > 10)
+        if (m_bookSettings.FontSize > 10)
         {
-            m_readerSettings.FontSize -= 2;
+            m_bookSettings.FontSize -= 2;
         }
-        ApplyLayoutSettings();
+        UpdateLayout();
         break;
 
     case OverlayMenuItem::Rotation:
@@ -223,7 +357,7 @@ void ReaderScreen::MenuLeft()
         {
             m_deviceSettings.Orientation--;
         }
-        ApplyLayoutSettings();
+        UpdateLayout();
         break;
 
     case OverlayMenuItem::GoToPage:
@@ -245,13 +379,26 @@ void ReaderScreen::MenuRight()
         static_cast<OverlayMenuItem>(
             m_readerSettings.SelectedMenuItem))
     {
+    case OverlayMenuItem::Font:
+    {
+        int nextFontIndex = static_cast<int>(m_bookSettings.Font) + 1;
+        // If index greater than last index, then set font index to first index
+        if (nextFontIndex >= static_cast<int>(ReaderFont::Count))
+        {
+            nextFontIndex = 0;
+        }
+        m_bookSettings.Font = static_cast<ReaderFont>(nextFontIndex);
+        Serial.printf("Reader font changed to = %s\n", ToString(m_bookSettings.Font));
+        UpdateLayout();
+        break;
+    }
     case OverlayMenuItem::FontSize:
 
-        if (m_readerSettings.FontSize < 30)
+        if (m_bookSettings.FontSize < 30)
         {
-            m_readerSettings.FontSize += 2;
+            m_bookSettings.FontSize += 2;
         }
-        ApplyLayoutSettings();
+        UpdateLayout();
         break;
 
     case OverlayMenuItem::Rotation:
@@ -264,7 +411,7 @@ void ReaderScreen::MenuRight()
         {
             m_deviceSettings.Orientation++;
         }
-        ApplyLayoutSettings();
+        UpdateLayout();
         break;
 
     case OverlayMenuItem::GoToPage:
@@ -287,12 +434,12 @@ void ReaderScreen::MenuSelect()
             m_readerSettings.SelectedMenuItem))
     {
     case OverlayMenuItem::Resume: // Resume
-        m_state = State::Reading;
+        ToggleOverlayMenu();
         break;
 
     case OverlayMenuItem::GoToPage: // Go To Page
         GoToPage(m_readerSettings.GoToPage);
-        m_state = State::Reading;
+        ToggleOverlayMenu();
         break;
     default:
         break;
@@ -309,7 +456,6 @@ void ReaderScreen::NextPage()
 
 void ReaderScreen::PreviousPage()
 {
-
     m_readerSettings.CurrentPage--;
 }
 

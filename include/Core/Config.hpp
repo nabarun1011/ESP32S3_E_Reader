@@ -10,9 +10,13 @@ namespace Config
     // SD
     constexpr int SD_CS = 10;
 
-    //Dispaly
+    //Display
     constexpr int Display_CS = 9;
     constexpr int Display_DC = 8;
     constexpr int Display_RST = 7;
     constexpr int Display_BUSY = 6;
+
+    //Buttons
+    constexpr int NavButton_Pin = 5;
+    constexpr int ActionBUtton_Pin = 4;
 }

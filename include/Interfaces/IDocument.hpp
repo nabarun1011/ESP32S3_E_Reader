@@ -3,6 +3,7 @@
 #include <memory>
 
 #include "Interfaces/IFile.hpp"
+#include "Interfaces/FileMode.hpp"
 
 class IDocument
 {

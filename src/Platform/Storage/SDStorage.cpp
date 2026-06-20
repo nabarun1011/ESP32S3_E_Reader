@@ -74,14 +74,25 @@ size_t SDStorage::FileSize(const String &path)
     return size;
 }
 
+
 std::unique_ptr<IFile> SDStorage::Open(
-    const String &path)
+    const String &path,
+    FileMode mode)
 {
     FsFile file;
 
-    if (!file.open(
-            path.c_str(),
-            O_RDONLY))
+    switch (mode)
+    {
+    case FileMode::Read:
+        file = m_sd.open(path.c_str(), O_RDONLY);
+        break;
+
+    case FileMode::Write:
+        file = m_sd.open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC);
+        break;
+    }
+
+    if (!file)
     {
         return nullptr;
     }

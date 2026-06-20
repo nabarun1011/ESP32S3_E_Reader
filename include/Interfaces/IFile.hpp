@@ -9,9 +9,9 @@ public:
 
     virtual bool IsOpen() const = 0;
 
-    virtual size_t Read(
-        void *buffer,
-        size_t size) = 0;
+    virtual size_t Read(void *buffer, size_t size) = 0;
+
+    virtual size_t Write(const void *buffer, size_t size) = 0;
 
     virtual bool Seek(
         uint32_t position) = 0;

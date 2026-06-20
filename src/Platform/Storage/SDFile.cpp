@@ -11,7 +11,6 @@ bool SDFile::IsOpen() const
     return m_file.isOpen();
 }
 
-
 size_t SDFile::Read(
     void *buffer,
     size_t size)
@@ -40,4 +39,13 @@ uint32_t SDFile::Size()
 void SDFile::Close()
 {
     m_file.close();
+}
+
+size_t SDFile::Write(
+    const void *buffer,
+    size_t size)
+{
+    return m_file.write(
+        static_cast<const uint8_t *>(buffer),
+        size);
 }

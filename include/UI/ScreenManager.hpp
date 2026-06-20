@@ -5,13 +5,12 @@
 class ScreenManager
 {
 public:
-    void SetScreen(
-        IScreen *screen);
+    void SetScreen(IScreen *screen);
 
-    void Update();
+    void HandleButton(Button button);
 
     void Draw();
 
 private:
-    IScreen *m_current = nullptr;
+    IScreen *m_currentScreen = nullptr;
 };

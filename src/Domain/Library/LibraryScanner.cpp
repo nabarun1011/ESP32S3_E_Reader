@@ -2,6 +2,7 @@
 
 static const char *TAG = "LibraryScanner";
 
+
 LibraryScanner::LibraryScanner(
     IStorage &storage)
     : m_storage(storage)
@@ -23,7 +24,7 @@ static bool IsSupportedBook(
 
 bool LibraryScanner::Scan()
 {
-    m_books.clear();
+    m_entries.clear();
 
     ScanDirectory("/");
 
@@ -74,12 +75,12 @@ void LibraryScanner::ScanDirectory(
         }
 
         Serial.printf("%s : Found book: %s\n", TAG, book.title.c_str());
-        m_books.push_back(book);
+        m_entries.push_back(book);
     }
 }
 
 const std::vector<BookInfo> &
-LibraryScanner::GetBooks() const
+LibraryScanner::GetEntries() const
 {
-    return m_books;
+    return m_entries;
 }

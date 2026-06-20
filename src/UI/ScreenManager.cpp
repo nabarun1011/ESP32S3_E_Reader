@@ -3,32 +3,33 @@
 void ScreenManager::SetScreen(
     IScreen *screen)
 {
-    if (m_current)
+    if (m_currentScreen)
     {
-        m_current->Exit();
+        m_currentScreen->Exit();
     }
 
-    m_current = screen;
+    m_currentScreen = screen;
 
-    if (m_current)
+    if (m_currentScreen)
     {
-        m_current->Enter();
+        m_currentScreen->Enter();
     }
 }
 
-
-void ScreenManager::Update()
+void ScreenManager::HandleButton(
+    Button button)
 {
-    if (m_current)
+    if (m_currentScreen)
     {
-        m_current->Update();
+        m_currentScreen->HandleButton(
+            button);
     }
 }
 
 void ScreenManager::Draw()
 {
-    if (m_current)
+    if (m_currentScreen)
     {
-        m_current->Draw();
+        m_currentScreen->Draw();
     }
 }

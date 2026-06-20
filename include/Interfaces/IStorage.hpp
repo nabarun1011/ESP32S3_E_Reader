@@ -5,6 +5,7 @@
 #include "vector"
 #include "DirectoryEntry.hpp"
 #include "memory"
+#include "Interfaces/FileMode.hpp"
 
 class IStorage
 {
@@ -19,7 +20,7 @@ public:
 
     virtual size_t FileSize(const String &path) = 0;
 
-    virtual std::unique_ptr<IFile> Open(const String &path) = 0;
+    virtual std::unique_ptr<IFile> Open(const String &path, FileMode mode) = 0;
 
     virtual std::vector<DirectoryEntry> ListDirectory(const String &path) = 0;
 };

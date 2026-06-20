@@ -1,5 +1,8 @@
 #include "Platform/Display/EPDDisplay.hpp"
 #include "Core/Config.hpp"
+#include <Fonts/FreeSerif9pt7b.h>
+#include <Fonts/FreeSans9pt7b.h>
+#include <Fonts/FreeMono9pt7b.h>
 
 bool m_frameActive = false;
 
@@ -47,14 +50,17 @@ int EPDDisplay::Height() const
     return m_display.height();
 }
 
-int EPDDisplay::LineHeight() const
+int EPDDisplay::LineHeight(ReaderFont font) const
 {
-    return 16; // Temporary value
+    return GetFont(font)->yAdvance;
 }
 
 int EPDDisplay::MeasureTextWidth(
-    const String &text)
+    const String &text,
+    ReaderFont font)
 {
+    m_display.setFont(GetFont(font));
+
     int16_t x1, y1;
     uint16_t w, h;
     m_display.getTextBounds(
@@ -85,11 +91,74 @@ void EPDDisplay::SetRotation(
 void EPDDisplay::DrawText(
     int x,
     int y,
-    const String &text)
+    const String &text,
+    ReaderFont font)
 {
+    m_display.setFont(GetFont(font));
+
     m_display.setCursor(
         x,
         y);
 
     m_display.print(text);
+}
+
+void EPDDisplay::DrawRect(
+    int x,
+    int y,
+    int width,
+    int height)
+{
+    m_display.drawRect(
+        x,
+        y,
+        width,
+        height,
+        GxEPD_BLACK);
+}
+
+void EPDDisplay::FillRect(
+    int x,
+    int y,
+    int width,
+    int height)
+{
+    m_display.fillRect(
+        x,
+        y,
+        width,
+        height,
+        GxEPD_WHITE);
+}
+
+void EPDDisplay::DrawLine(
+    int x1,
+    int y1,
+    int x2,
+    int y2)
+{
+    m_display.drawLine(
+        x1,
+        y1,
+        x2,
+        y2,
+        GxEPD_BLACK);
+}
+
+const GFXfont *EPDDisplay::GetFont(
+    ReaderFont font) const
+{
+    switch (font)
+    {
+    case ReaderFont::Serif:
+        return &FreeSerif9pt7b;
+
+    case ReaderFont::Sans:
+        return &FreeSans9pt7b;
+
+    case ReaderFont::Mono:
+        return &FreeMono9pt7b;
+    }
+
+    return &FreeSans9pt7b;
 }

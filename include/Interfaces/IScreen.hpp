@@ -1,6 +1,8 @@
 // Interface for Screen states
 #pragma once
 
+#include "Platform/Input/Button.hpp"
+
 class IScreen
 {
 public:
@@ -10,7 +12,9 @@ public:
 
     virtual void Exit() = 0;
 
-    virtual void Update() = 0;
+    virtual void HandleButton(Button button) = 0;
 
     virtual void Draw() = 0;
+
+    virtual void Refresh() = 0;
 };

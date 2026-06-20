@@ -12,9 +12,9 @@ public:
 
     bool IsOpen() const override;
 
-    size_t Read(
-        void *buffer,
-        size_t size) override;
+    size_t Read(void *buffer, size_t size) override;
+
+    size_t Write(const void *buffer, size_t size) override;
 
     bool Seek(
         uint32_t position) override;

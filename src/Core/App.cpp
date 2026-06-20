@@ -7,9 +7,9 @@ static const char *TAG = "App";
 GxEPD2_BW<GxEPD2_420_GDEY042T81, GxEPD2_420_GDEY042T81::HEIGHT>
     display(GxEPD2_420_GDEY042T81(Config::Display_CS, Config::Display_DC, Config::Display_RST, Config::Display_BUSY));
 
-App::App() : m_storage(), m_library(m_storage), m_display(), m_screenManager(),
-             m_libraryScreen(m_library, m_display), m_document(), m_deviceSettings(),
-             m_readerScreen(m_document, m_display, m_deviceSettings)
+App::App() : m_storage(), m_bookSettingsRepository(m_storage), m_display(), m_screenManager(),
+             m_libraryScreen(m_storage, m_display, m_deviceSettings, m_libSettings), m_document(), m_deviceSettings(), m_libSettings(),
+             m_readerScreen(m_document, m_display, m_deviceSettings, m_bookSettingsRepository), m_inputManager(m_screenManager)
 {
 }
 
@@ -34,21 +34,22 @@ bool App::Init()
         Serial.printf("%s : Display Init Failed", TAG);
         return false;
     }
-    m_library.Scan();
 
+    m_display.SetRotation(m_deviceSettings.Orientation);
     // m_screenManager.SetScreen(
     //     &m_libraryScreen);
 
     // m_screenManager.Draw();
 
-    auto file =
-        m_storage.Open(
-            "/Tattva_Bodha_Readable_English_Translation.txt");
+    // auto file =
+    //     m_storage.Open(
+    //         "/Tattva_Bodha_Readable_English_Translation.txt",
+    //         FileMode::Read);
 
-    m_document.Open(move(file));
+    // m_document.Open(move(file));
 
     m_screenManager.SetScreen(
-        &m_readerScreen);
+        &m_libraryScreen);
 
     m_screenManager.Draw();
 
@@ -57,4 +58,5 @@ bool App::Init()
 
 void App::Update()
 {
+    m_inputManager.Update();
 }

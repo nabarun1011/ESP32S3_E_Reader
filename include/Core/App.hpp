@@ -2,31 +2,36 @@
 
 #include "Platform/Storage/SDStorage.hpp"
 #include "Platform/Display/EPDDisplay.hpp"
-#include "Domain/Library/LibraryScanner.hpp"
 #include "UI/ScreenManager.hpp"
 #include "UI/Screens/LibraryScreen.hpp"
 #include "UI/Screens/ReaderScreen.hpp"
 #include "Domain/Reader/TextDocument.hpp"
 #include "Domain/Settings/DeviceSettings.hpp"
+#include "Platform/Input/InputManager.hpp"
+#include "Platform/Storage/BookSettingsRepository.hpp"
 
 class App
 {
 private:
     SDStorage m_storage;
 
-    LibraryScanner m_library;
+    BookSettingsRepository m_bookSettingsRepository;
 
     EPDDisplay m_display;
+
+    DeviceSettings m_deviceSettings;
+
+    LibrarySettings m_libSettings;
 
     ScreenManager m_screenManager;
 
     LibraryScreen m_libraryScreen;
 
-    TextDocument m_document;
-
-    DeviceSettings m_deviceSettings;
+    TextDocument m_document;    
 
     ReaderScreen m_readerScreen;
+
+    InputManager m_inputManager;
 
 public:
     App();

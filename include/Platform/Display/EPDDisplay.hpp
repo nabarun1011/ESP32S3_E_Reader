@@ -20,9 +20,11 @@ public:
 
     int Height() const override;
 
-    int LineHeight() const override;
+    int LineHeight(ReaderFont font) const override;
 
-    int MeasureTextWidth(const String &text) override;
+    int MeasureTextWidth(const String &text, ReaderFont font) override;
+
+    // void SetFont(const ReaderFont font) override;
 
     void SetTextSize(int size) override;
 
@@ -30,5 +32,13 @@ public:
 
     void SetRotation(uint8_t rotation) override;
 
-    void DrawText(int x, int y, const String &text) override;
+    void DrawText(int x, int y, const String &text, ReaderFont font) override;
+
+    void DrawRect(int x, int y, int width, int height) override;
+
+    void FillRect(int x, int y, int width, int height) override;
+
+    void DrawLine(int x1, int y1, int x2, int y2) override;
+
+    const GFXfont *GetFont(ReaderFont font) const;
 };
