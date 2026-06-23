@@ -12,7 +12,7 @@ bool InputManager::Init()
     return true;
 }
 
-void InputManager::Update()
+bool InputManager::Update()
 {
     Button current =
         ReadButtons();
@@ -24,17 +24,17 @@ void InputManager::Update()
         m_lastChangeMs =
             millis();
 
-        return;
+        return false;
     }
 
     if ((millis() - m_lastChangeMs) < DebounceMs)
     {
-        return;
+        return false;
     }
 
     if (m_candidateButton == m_lastStableButton)
     {
-        return;
+        return false;
     }
 
     m_lastStableButton =
@@ -42,11 +42,15 @@ void InputManager::Update()
 
     if (m_lastStableButton != Button::None)
     {
-        // Serial.printf("Button: %d\n", static_cast<uint32_t>(m_lastStableButton));
-        m_screenManager
-            .HandleButton(
-                m_lastStableButton);
+        return true;
     }
+
+    return false;
+}
+
+Button InputManager::GetLastStableButton()
+{
+    return m_lastStableButton;
 }
 
 Button InputManager::ReadButtons()

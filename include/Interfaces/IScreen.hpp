@@ -2,6 +2,14 @@
 #pragma once
 
 #include "Platform/Input/Button.hpp"
+#include "UI/ScreenCommand.hpp"
+
+enum class RefreshMode
+{
+    None,
+    Partial,
+    Full
+};
 
 class IScreen
 {
@@ -12,9 +20,8 @@ public:
 
     virtual void Exit() = 0;
 
-    virtual void HandleButton(Button button) = 0;
+    virtual ScreenCommand HandleButton(Button button) = 0;
 
-    virtual void Draw() = 0;
 
-    virtual void Refresh() = 0;
+    virtual void Refresh(RefreshMode mode=RefreshMode::Partial) = 0;
 };

@@ -17,12 +17,12 @@ size_t TextRenderer::MaxVisibleLines(int availableHeight) const
            m_display.LineHeight(m_font);
 }
 
-Page TextRenderer::BuildPage(
+std::vector<WrappedLine>
+TextRenderer::WrapDocument(
     const String &text,
-    size_t startLine,
-    int availableHeight)
+    int maxWidth)
 {
-    Page page;
+    std::vector<WrappedLine> lines;
 
     String normalized = text;
 
@@ -30,7 +30,6 @@ Page TextRenderer::BuildPage(
     normalized.replace('\r', '\n');
 
     int start = 0;
-    size_t currentLine = 0;
 
     while (start < normalized.length())
     {
@@ -52,49 +51,65 @@ Page TextRenderer::BuildPage(
         auto wrapped =
             WrapText(
                 paragraph,
-                m_display.Width() - 20);
+                start,
+                maxWidth);
+
+        lines.insert(
+            lines.end(),
+            wrapped.begin(),
+            wrapped.end());
 
         if (wrapped.empty())
         {
-            if (currentLine >= startLine)
-            {
-                if (page.Lines.size() >= MaxVisibleLines(availableHeight))
-                {
-                    page.NextPageStartLine = currentLine;
-                    return page;
-                }
-
-                page.Lines.push_back("");
-            }
-
-            currentLine++;
-        }
-        else
-        {
-            // Iterate throught wrapped paragraph lines
-            for (const auto &line : wrapped)
-            {
-                if (currentLine >= startLine)
-                {
-                    if (page.Lines.size() >= MaxVisibleLines(availableHeight))
-                    {
-                        page.NextPageStartLine = currentLine;
-                        return page;
-                    }
-
-                    page.Lines.push_back(line);
-                }
-
-                currentLine++;
-            }
+            lines.push_back(
+                {"",
+                 static_cast<size_t>(start)});
         }
 
         start = end + 1;
     }
 
-    page.NextPageStartLine = currentLine;
+    return lines;
+}
+
+Page TextRenderer::BuildPageFromLines(
+    const std::vector<WrappedLine> &lines,
+    size_t startLine,
+    int availableHeight)
+{
+    Page page;
+
+    const size_t maxLines =
+        MaxVisibleLines(
+            availableHeight);
+
+    for (size_t i = startLine;
+         i < lines.size();
+         ++i)
+    {
+        if (page.Lines.empty())
+        {
+            page.FirstCharacterOffset =
+                lines[i].StartOffset;
+        }
+
+        if (page.Lines.size() >= maxLines)
+        {
+            page.NextPageStartLine = i;
+            return page;
+        }
+
+        page.Lines.push_back(
+            lines[i]);
+    }
+
+    page.NextPageStartLine =
+        lines.size();
+
     return page;
 }
+
+
 
 void TextRenderer::DrawPage(
     int x,
@@ -110,16 +125,20 @@ void TextRenderer::DrawPage(
             y +
                 i *
                     m_display.LineHeight(m_font),
-            page.Lines[i],
+            page.Lines[i].Text,
             m_font);
     }
 }
 
-std::vector<String> TextRenderer::WrapText(
+std::vector<WrappedLine> TextRenderer::WrapText(
     const String &text,
+    size_t paragraphOffset,
     int maxWidth)
 {
-    std::vector<String> lines;
+    std::vector<WrappedLine> lines;
+
+    size_t currentLineOffset = paragraphOffset;
+    size_t currentWordOffset = paragraphOffset;
 
     String currentLine;
 
@@ -134,6 +153,7 @@ std::vector<String> TextRenderer::WrapText(
             end = text.length();
         }
 
+        currentWordOffset = start + paragraphOffset;
         String word =
             text.substring(start, end);
 
@@ -150,10 +170,17 @@ std::vector<String> TextRenderer::WrapText(
         {
             if (!currentLine.isEmpty())
             {
-                lines.push_back(currentLine);
+                WrappedLine line;
+
+                line.Text = currentLine;
+
+                line.StartOffset = currentLineOffset;
+
+                lines.push_back(line);
             }
 
             currentLine = word;
+            currentLineOffset = currentWordOffset;
         }
 
         start = end + 1;
@@ -161,7 +188,13 @@ std::vector<String> TextRenderer::WrapText(
 
     if (!currentLine.isEmpty())
     {
-        lines.push_back(currentLine);
+        WrappedLine line;
+
+        line.Text = currentLine;
+
+        line.StartOffset = currentLineOffset;
+
+        lines.push_back(line);
     }
 
     return lines;

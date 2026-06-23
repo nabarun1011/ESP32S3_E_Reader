@@ -13,4 +13,6 @@ public:
     virtual bool IsOpen() = 0;
 
     virtual String ReadAll() = 0;
+
+    virtual size_t Size() = 0;
 };

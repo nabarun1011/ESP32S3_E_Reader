@@ -23,4 +23,6 @@ struct LibrarySettings
     LibraryViewMode LibraryView = LibraryViewMode::List;
 
     LibrarySort LibrarySorting = LibrarySort::NameAscending;
+
+    
 };

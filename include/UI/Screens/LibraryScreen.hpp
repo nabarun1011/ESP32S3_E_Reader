@@ -2,7 +2,7 @@
 
 #include "UI/Screens/BaseScreen.hpp"
 #include "Domain/Library/LibraryScanner.hpp"
-#include "Domain/Library/LibraryLayout.hpp"
+#include "UI/Layout/LibraryLayout.hpp"
 #include "Domain/Settings/LibrarySettings.hpp"
 
 class LibraryScreen : public BaseScreen
@@ -18,13 +18,11 @@ public:
 
     void Exit() override;
 
-    void Refresh() override;
+    void Refresh(RefreshMode mode = RefreshMode::Partial) override;
 
-    void HandleButton(Button button) override;
+    void RefreshSelection();
 
-    bool HasBookOpenRequest() const;
-
-    BookInfo TakeBookOpenRequest();
+    ScreenCommand HandleButton(Button button) override;
 
     void MoveUp();
     void MoveDown();
@@ -33,7 +31,14 @@ public:
 
     void SortEntries();
 
-    void OpenSelectedBook();
+    ScreenCommand OpenSelectedEntry();
+
+    // To check if entry is supported book or directory or hidden item
+    bool IsHiddenEntry(const DirectoryEntry &entry);
+
+    String GetParentPath(const String &path);
+
+    bool IsRootDirectory() const;
 
     void EnsureSelectionVisible();
 
@@ -45,22 +50,22 @@ public:
     void LoadDirectory(const String &path);
     bool IsSupportedBook(const String &filename);
 
+    // void DrawScrollbar();
+
 private:
+    void DrawHeader();
+
+private:
+    IStorage &m_storage;
     String m_rootBookPath = "/Books";
     String m_currentPath = "/Books";
 
-    std::vector<DirectoryEntry> m_entries;
-
     LibrarySettings m_libSettings;
 
-    IStorage &m_storage;
+    std::vector<DirectoryEntry> m_entries;
 
     LibraryLayout m_layout;
 
     size_t m_selectedIndex = 0;
     size_t m_firstVisibleIndex = 0;
-
-    bool m_hasBookOpenRequest = false;
-
-    BookInfo m_requestedBook;
 };

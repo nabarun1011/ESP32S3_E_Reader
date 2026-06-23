@@ -1,13 +1,14 @@
 #pragma once
 
 #include "Interfaces/IScreen.hpp"
+#include "UI/ScreenCommand.hpp"
 
 class ScreenManager
 {
 public:
     void SetScreen(IScreen *screen);
 
-    void HandleButton(Button button);
+    ScreenCommand HandleButton(Button button);
 
     void Draw();
 

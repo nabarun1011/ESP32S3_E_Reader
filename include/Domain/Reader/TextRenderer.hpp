@@ -2,6 +2,7 @@
 
 #include "Interfaces/IDisplay.hpp"
 #include "Domain/Reader/Page.hpp"
+#include "Domain/Reader/WrappedLine.hpp"
 
 class TextRenderer
 {
@@ -11,15 +12,20 @@ public:
 
     size_t MaxVisibleLines(int avaialableHeight) const;
 
-    Page BuildPage(const String &text, size_t startLine, int avaialableHeight);
+    Page BuildPageFromLines(const std::vector<WrappedLine> &lines, size_t startLine, int availableHeight);
 
     void DrawPage(int x, int y, const Page &page);
 
     void SetFont(ReaderFont font);
 
-private:
-    std::vector<String> WrapText(
+    std::vector<WrappedLine> WrapDocument(
         const String &text,
+        int maxWidth);
+
+private:
+    std::vector<WrappedLine> WrapText(
+        const String &text,
+        size_t paragraphOffset,
         int maxWidth);
 
     ReaderFont m_font = ReaderFont::Serif;

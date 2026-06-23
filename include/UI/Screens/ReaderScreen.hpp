@@ -8,11 +8,13 @@
 #include "Domain/Library/BookInfo.hpp"
 #include "Interfaces/IBookSettingsRepository.hpp"
 #include "Interfaces/IStorage.hpp"
+#include "UI/Layout/ReaderLayout.hpp"
 
 class ReaderScreen : public BaseScreen
 {
 public:
     ReaderScreen(
+        IStorage &storage,
         TextDocument &document,
         IDisplay &display,
         DeviceSettings &deviceSettings,
@@ -20,10 +22,10 @@ public:
 
     void Enter() override;
     void Exit() override;
-    void HandleButton(Button button) override;
-    void Refresh() override;
+    ScreenCommand HandleButton(Button button) override;
+    void Refresh(RefreshMode mode) override;
 
-    void OpenBook(const BookInfo &book);
+    void SetBook(const BookInfo &book);
 
     void UpdateLayout();
     void ApplyReaderSettings();
@@ -43,14 +45,6 @@ public:
     void MenuRight();
 
 private:
-    struct ReaderLayout
-    {
-        int TextTop = 5;
-        int TextAreaHeight;
-
-        int FooterY;
-        int FooterHeight = 20;
-    };
     enum class State
     {
         Reading,
@@ -70,8 +64,11 @@ private:
     };
 
     void DrawOverlayMenu();
+    void DrawFooter();
+    void DrawHeader();
 
 private:
+    IStorage &m_storage;
     TextDocument &m_document;
     IBookSettingsRepository &m_bookSettingsRepository;
     BookInfo m_currentBook;
@@ -80,6 +77,9 @@ private:
     TextRenderer m_renderer;
 
     std::vector<size_t> m_pageStarts;
+    std::vector<size_t> m_pageCharacterOffsets;
+    size_t FindPageForOffset(size_t offset) const;
+    std::vector<WrappedLine> m_wrappedLines;
 
     State m_state = State::Reading;
 

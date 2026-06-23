@@ -25,17 +25,39 @@ bool EPDDisplay::Init()
     return true;
 }
 
-void EPDDisplay::Render(
+void EPDDisplay::RenderFull(
     const std::function<void()> &drawFunc)
 {
+    Serial.printf("Display full refreshed\n");
     m_display.setFullWindow();
 
     m_display.firstPage();
 
     do
     {
-        m_display.fillScreen(
-            GxEPD_WHITE);
+        m_display.fillScreen(GxEPD_WHITE);
+        drawFunc();
+    } while (m_display.nextPage());
+}
+void EPDDisplay::RenderPartial(
+    int x,
+    int y,
+    int w,
+    int h,
+    const std::function<void()> &drawFunc)
+{
+    Serial.printf("Display partial refreshed\n");
+    m_display.setPartialWindow(
+        x,
+        y,
+        w,
+        h);
+
+    m_display.firstPage();
+
+    do
+    {
+        // m_display.fillScreen(GxEPD_WHITE);
         drawFunc();
     } while (m_display.nextPage());
 }

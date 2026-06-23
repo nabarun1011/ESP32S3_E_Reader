@@ -13,7 +13,9 @@ public:
 
     bool Init();
 
-    void Update();
+    bool Update();
+
+    Button GetLastStableButton();
 
 private:
     Button ReadDirectionButton();

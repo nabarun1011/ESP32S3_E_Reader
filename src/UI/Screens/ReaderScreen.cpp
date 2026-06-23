@@ -1,11 +1,13 @@
 #include "UI/Screens/ReaderScreen.hpp"
 
 ReaderScreen::ReaderScreen(
+    IStorage &storage,
     TextDocument &document,
     IDisplay &display,
     DeviceSettings &deviceSettings,
     IBookSettingsRepository &bookSettingsRepository)
     : BaseScreen(deviceSettings, display),
+      m_storage(storage),
       m_document(document),
       m_renderer(display),
       m_bookSettingsRepository(bookSettingsRepository)
@@ -14,45 +16,46 @@ ReaderScreen::ReaderScreen(
 
 void ReaderScreen::Enter()
 {
-    char buffer[4096];
+    auto file = m_storage.Open(m_currentBook.path, FileMode::Read);
 
-    size_t read =
-        m_document.Read(
-            buffer,
-            sizeof(buffer) - 1);
+    if (!file)
+    {
+        return;
+    }
 
-    buffer[read] = '\0';
+    m_document.Open(std::move(file));
 
-    m_text = buffer;
+    m_text = m_document.ReadAll();
 
     UpdateLayout();
+    GoToPage(m_readerSettings.CurrentPage);
 
-    Serial.printf(
-        "Total Pages = %u\n",
-        m_pageStarts.size());
-
-    for (size_t i = 0; i < m_pageStarts.size(); i++)
-    {
-        Serial.printf(
-            "Page %u -> StartLine %u\n",
-            i + 1,
-            m_pageStarts[i]);
-    }
+    Refresh(RefreshMode::Full);
 }
 
 void ReaderScreen::UpdateLayout()
 {
     ApplyReaderSettings();
     // Set footer height based on UI font of page number
-    m_layout.FooterHeight = m_display.LineHeight(m_deviceSettings.UIFont) + 4;
-    m_layout.TextAreaHeight = m_display.Height() - m_layout.FooterHeight;
-    m_layout.FooterY = m_display.Height() - m_layout.FooterHeight;
+    m_layout.HeaderHeight = m_display.LineHeight(m_deviceSettings.UIFont);
+    m_layout.ContentY = m_layout.HeaderHeight + m_display.LineHeight(m_deviceSettings.UIFont) * 0.8;
+    m_layout.FooterHeight = m_display.LineHeight(m_deviceSettings.UIFont);
+    m_layout.ContentHeight = m_display.Height() - m_layout.FooterHeight - m_layout.HeaderHeight;
+    m_wrappedLines = m_renderer.WrapDocument(m_text, m_display.Width() - 20);
     RebuildPageIndex();
+    m_readerSettings.CurrentPage = FindPageForOffset(m_bookSettings.LastCharacterOffset);
+    if (m_readerSettings.CurrentPage > m_pageStarts.size() - 1)
+    {
+        m_readerSettings.CurrentPage = m_pageStarts.size() - 1;
+    }
 }
 
 void ReaderScreen::ApplyReaderSettings()
 {
-    m_readerSettings.GoToPage = m_readerSettings.CurrentPage;
+    if (m_readerSettings.CurrentPage < m_pageCharacterOffsets.size())
+    {
+        m_bookSettings.LastCharacterOffset = m_pageCharacterOffsets[m_readerSettings.CurrentPage];
+    }
     m_display.SetRotation(m_deviceSettings.Orientation);
     m_renderer.SetFont(m_bookSettings.Font);
     m_display.SetTextSize(m_bookSettings.FontSize);
@@ -60,25 +63,28 @@ void ReaderScreen::ApplyReaderSettings()
 
 void ReaderScreen::Exit()
 {
+    if (m_readerSettings.CurrentPage < m_pageCharacterOffsets.size())
+    {
+        m_bookSettings.LastCharacterOffset = m_pageCharacterOffsets[m_readerSettings.CurrentPage];
+    }
     m_bookSettingsRepository.Save(
         m_currentBook.path,
         m_bookSettings);
 }
 
-void ReaderScreen ::OpenBook(const BookInfo &book)
+void ReaderScreen ::SetBook(const BookInfo &book)
 {
     m_currentBook = book;
 
     m_bookSettings =
         BookSettings();
-
-    m_bookSettingsRepository.Load(
-        book.path,
-        m_bookSettings);
-    Enter();
+    if (!m_bookSettingsRepository.Load(book.path, m_bookSettings))
+    {
+        Serial.printf("Failed to load book settings for book: %s\n", book.path.c_str());
+    }
 }
 
-void ReaderScreen::HandleButton(Button button)
+ScreenCommand ReaderScreen::HandleButton(Button button)
 {
     bool needRedraw = true;
     switch (m_state)
@@ -104,7 +110,8 @@ void ReaderScreen::HandleButton(Button button)
             ToggleOverlayMenu();
             break;
         case Button::Back:
-            // Return to library
+            return {
+                ScreenCommandType::OpenLibrary};
             break;
         default:
             break;
@@ -145,38 +152,60 @@ void ReaderScreen::HandleButton(Button button)
 
     if (needRedraw)
     {
-        Refresh();
+        Refresh(RefreshMode::Partial);
     }
+
+    return {};
 }
 
 void ReaderScreen::RebuildPageIndex()
 {
-
     m_pageStarts.clear();
+    m_pageCharacterOffsets.clear();
 
     m_pageStarts.push_back(0);
+    // m_pageCharacterOffsets.push_back(0);
 
     size_t startLine = 0;
 
     while (true)
     {
-        Page page =
-            m_renderer.BuildPage(
-                m_text,
-                startLine,
-                m_layout.TextAreaHeight);
+        Page page = m_renderer.BuildPageFromLines(m_wrappedLines, startLine, m_layout.ContentHeight);
 
         if (page.NextPageStartLine <= startLine)
         {
             break;
         }
 
-        startLine =
-            page.NextPageStartLine;
+        if (page.Lines.size() == 0)
+        {
+            break;
+        }
 
-        m_pageStarts.push_back(
-            startLine);
+        startLine = page.NextPageStartLine;
+        m_pageStarts.push_back(startLine);
+        m_pageCharacterOffsets.push_back(page.FirstCharacterOffset);
     }
+}
+
+size_t ReaderScreen::FindPageForOffset(size_t offset) const
+{
+    size_t page = 0;
+
+    for (size_t i = 0;
+         i < m_pageCharacterOffsets.size();
+         ++i)
+    {
+        if (m_pageCharacterOffsets[i] >
+            offset)
+        {
+            break;
+        }
+
+        page = i;
+    }
+
+    return page;
 }
 
 void ReaderScreen::ToggleOverlayMenu()
@@ -184,6 +213,7 @@ void ReaderScreen::ToggleOverlayMenu()
     if (m_state == State::Reading)
     {
         m_state = State::Menu;
+        m_readerSettings.GoToPage = m_readerSettings.CurrentPage;
     }
     else
     {
@@ -192,39 +222,50 @@ void ReaderScreen::ToggleOverlayMenu()
     Serial.printf("m_state toggled to= %s\n", m_state == State::Menu ? "Menu" : "Reading");
 }
 
-void ReaderScreen::Refresh()
+void ReaderScreen::Refresh(RefreshMode mode)
 {
     m_display.SetTextSize(m_bookSettings.FontSize);
 
-    Page page =
-        m_renderer.BuildPage(
-            m_text,
-            m_pageStarts[m_readerSettings.CurrentPage],
-            m_layout.TextAreaHeight);
+    Page page = m_renderer.BuildPageFromLines(m_wrappedLines, m_pageStarts[m_readerSettings.CurrentPage], m_layout.ContentHeight);
 
-    m_display.Render(
-        [this, page]()
-        {
-            String footer =
-                "Page " +
-                String(m_readerSettings.CurrentPage) +
-                " / " +
-                String(m_pageStarts.size() - 1);
-
-            m_display.DrawText(
-                10,
-                m_display.Height() - 10,
-                footer, m_deviceSettings.UIFont);
-
-            m_renderer.DrawPage(
-                10, 20,
-                page);
-
-            if (m_state == State::Menu)
+    if (mode == RefreshMode::Full)
+    {
+        m_display.RenderFull(
+            [this, page]()
             {
-                DrawOverlayMenu();
-            }
-        });
+                DrawHeader();
+                DrawFooter();
+
+                m_renderer.DrawPage(
+                    10, m_layout.ContentY,
+                    page);
+
+                if (m_state == State::Menu)
+                {
+                    DrawOverlayMenu();
+                }
+            });
+    }
+    else
+    {
+        m_display.RenderPartial(0, 0,
+                                m_display.Width(),
+                                m_display.Height(),
+                                [this, page]()
+                                {
+                                    DrawHeader();
+                                    DrawFooter();
+
+                                    m_renderer.DrawPage(
+                                        10, m_layout.ContentY,
+                                        page);
+
+                                    if (m_state == State::Menu)
+                                    {
+                                        DrawOverlayMenu();
+                                    }
+                                });
+    }
 }
 
 void ReaderScreen::DrawOverlayMenu()
@@ -278,7 +319,7 @@ void ReaderScreen::DrawOverlayMenu()
             text = "Rotation: [" + String(m_deviceSettings.Orientation) + "]";
             break;
         case OverlayMenuItem::GoToPage:
-            text = "Go To Page: [" + String(m_readerSettings.GoToPage) + "/%" + String(m_pageStarts.size() - 1) + "]";
+            text = "Go To Page: [" + String(m_readerSettings.GoToPage) + "/" + String(m_pageStarts.size() - 1) + "]";
             break;
         case OverlayMenuItem::Library:
             text = "Library";
@@ -302,6 +343,37 @@ void ReaderScreen::DrawOverlayMenu()
 
         y += m_display.LineHeight(m_deviceSettings.UIFont) + 4;
     }
+}
+
+void ReaderScreen::DrawFooter()
+{
+    String footer =
+        "Page " +
+        String(m_readerSettings.CurrentPage) +
+        " / " +
+        String(m_pageStarts.size() - 1);
+
+    m_display.DrawText(
+        10,
+        m_display.Height() - 10,
+        footer, m_deviceSettings.UIFont);
+}
+
+void ReaderScreen::DrawHeader()
+{
+    m_display.DrawLine(
+        0,
+        m_layout.HeaderHeight,
+        m_display.Width(),
+        m_layout.HeaderHeight);
+
+    int headerY = m_display.LineHeight(m_deviceSettings.UIFont)*0.8;
+
+    m_display.DrawText(
+        5,
+        headerY,
+        m_currentBook.title,
+        m_deviceSettings.UIFont);
 }
 
 void ReaderScreen::MenuUp()
@@ -439,6 +511,7 @@ void ReaderScreen::MenuSelect()
 
     case OverlayMenuItem::GoToPage: // Go To Page
         GoToPage(m_readerSettings.GoToPage);
+        UpdateLayout();
         ToggleOverlayMenu();
         break;
     default:
@@ -448,7 +521,7 @@ void ReaderScreen::MenuSelect()
 
 void ReaderScreen::NextPage()
 {
-    if (m_readerSettings.CurrentPage + 1 < m_pageStarts.size())
+    if (m_readerSettings.CurrentPage < m_pageStarts.size() - 1)
     {
         m_readerSettings.CurrentPage++;
     }
@@ -456,7 +529,10 @@ void ReaderScreen::NextPage()
 
 void ReaderScreen::PreviousPage()
 {
-    m_readerSettings.CurrentPage--;
+    if (m_readerSettings.CurrentPage > 0)
+    {
+        m_readerSettings.CurrentPage--;
+    }
 }
 
 void ReaderScreen::GoToPage(size_t page)

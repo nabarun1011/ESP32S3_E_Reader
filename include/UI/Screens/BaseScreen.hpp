@@ -8,8 +8,6 @@ class BaseScreen : public IScreen
 {
 public:
     BaseScreen(DeviceSettings &deviceSettings, IDisplay &display);
-    void Draw() override;
-
 protected:
     DeviceSettings &m_deviceSettings;
     IDisplay &m_display;

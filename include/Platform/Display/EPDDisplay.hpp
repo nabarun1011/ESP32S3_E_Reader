@@ -14,7 +14,9 @@ private:
 public:
     explicit EPDDisplay();
 
-    void Render(const std::function<void()> &drawFunc) override;
+    void RenderFull(const std::function<void()> &drawFunc) override;
+
+    void RenderPartial(int x, int y, int width, int height, const std::function<void()> &drawFunc) override;
 
     int Width() const override;
 

@@ -18,7 +18,7 @@ public:
 
     bool IsOpen() override;
 
-    uint32_t Size();
+    size_t Size() override;
 
     uint32_t Position();
 

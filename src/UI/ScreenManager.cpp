@@ -16,20 +16,21 @@ void ScreenManager::SetScreen(
     }
 }
 
-void ScreenManager::HandleButton(
-    Button button)
+ScreenCommand ScreenManager::HandleButton(Button button)
 {
     if (m_currentScreen)
     {
-        m_currentScreen->HandleButton(
+        return m_currentScreen->HandleButton(
             button);
     }
+
+    return {};
 }
 
 void ScreenManager::Draw()
 {
     if (m_currentScreen)
     {
-        m_currentScreen->Draw();
+        m_currentScreen->Refresh();
     }
 }

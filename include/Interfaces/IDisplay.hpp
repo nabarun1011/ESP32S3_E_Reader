@@ -4,10 +4,12 @@
 #include <functional>
 #include <Domain/Reader/ReaderFont.hpp>
 
+
 class IDisplay
 {
 public:
-    virtual void Render(const std::function<void()> &drawFunc) = 0;
+    virtual void RenderFull(const std::function<void()> &drawFunc) = 0;
+    virtual void RenderPartial(int x, int y, int width, int height, const std::function<void()> &drawFunc) = 0;
 
     virtual ~IDisplay() = default;
 
