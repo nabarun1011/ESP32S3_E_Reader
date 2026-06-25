@@ -15,6 +15,7 @@ void LibraryScreen::Enter()
 {
     Serial.printf("%s : LibraryScreen Selection index: %d\n", TAG, m_selectedIndex);
     LoadDirectory(m_rootBookPath);
+    Refresh(true);
 }
 
 void LibraryScreen::Exit()
@@ -92,30 +93,12 @@ void LibraryScreen::EnsureSelectionVisible()
     }
 }
 
-void LibraryScreen::Refresh(RefreshMode mode)
+void LibraryScreen::Draw()
 {
     RebuildLayout();
-    switch (m_libSettings.LibraryView)
-    {
-    case LibraryViewMode::List:
-        if (mode == RefreshMode::Full)
-        {
-            m_display.RenderFull([this]()
-                                 { DrawHeader(); 
-                                    DrawListView(); 
-                                DrawScrollbar(); });
-        }
-        else
-        {
-            RefreshSelection();
-        }
-        break;
-    case LibraryViewMode::Grid:
-        DrawGridView();
-        break;
-    default:
-        break;
-    }
+    DrawHeader("Library");
+    DrawListView();
+    DrawScrollbar();
 }
 void LibraryScreen::RefreshSelection()
 {
@@ -128,7 +111,7 @@ void LibraryScreen::RefreshSelection()
         height,
         [this]()
         {
-            DrawHeader();
+            DrawHeader("Library");
             DrawListView();
             DrawScrollbar();
         });
@@ -223,8 +206,6 @@ void LibraryScreen::LoadDirectory(const String &path)
     m_selectedIndex = 0;
 
     m_firstVisibleIndex = 0;
-
-    Refresh(RefreshMode::Full);
 }
 
 void LibraryScreen::SortEntries()
@@ -287,23 +268,6 @@ bool LibraryScreen::IsHiddenEntry(
 
     return entry.name.endsWith(
         ".settings");
-}
-
-void LibraryScreen::DrawHeader()
-{
-    m_display.DrawLine(
-        0,
-        m_layout.HeaderHeight,
-        m_display.Width(),
-        m_layout.HeaderHeight);
-
-    int headerY = m_display.LineHeight(m_deviceSettings.UIFont) * 0.8;
-
-    m_display.DrawText(
-        5,
-        headerY,
-        "Library",
-        m_deviceSettings.UIFont);
 }
 
 void LibraryScreen::DrawListView()
@@ -373,19 +337,19 @@ ScreenCommand LibraryScreen::HandleButton(Button button)
     {
     case Button::Up:
         MoveUp();
-        Refresh(RefreshMode::Partial);
+        Refresh();
         break;
     case Button::Down:
         MoveDown();
-        Refresh(RefreshMode::Partial);
+        Refresh();
         break;
     case Button::Left:
         MoveLeft();
-        Refresh(RefreshMode::Partial);
+        Refresh();
         break;
     case Button::Right:
         MoveRight();
-        Refresh(RefreshMode::Partial);
+        Refresh();
         break;
     case Button::Select:
         return OpenSelectedEntry();

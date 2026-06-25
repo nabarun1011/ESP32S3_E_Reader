@@ -5,7 +5,9 @@
 #include "Domain/Settings/LibrarySettings.hpp"
 #include "Interfaces/IStorage.hpp"
 
-class LibraryScreen : public BaseScreen
+
+
+class LibraryScreen : public BaseScreen<LibraryLayout>
 {
 public:
     LibraryScreen(
@@ -18,7 +20,7 @@ public:
 
     void Exit() override;
 
-    void Refresh(RefreshMode mode = RefreshMode::Partial) override;
+    void Draw() override;
 
     void RefreshSelection();
 
@@ -50,9 +52,7 @@ public:
     void LoadDirectory(const String &path);
     bool IsSupportedBook(const String &filename);
 
-
 private:
-    void DrawHeader();
     void DrawScrollbar();
 
 private:
@@ -63,8 +63,6 @@ private:
     LibrarySettings m_libSettings;
 
     std::vector<DirectoryEntry> m_entries;
-
-    LibraryLayout m_layout;
 
     size_t m_selectedIndex = 0;
     size_t m_firstVisibleIndex = 0;

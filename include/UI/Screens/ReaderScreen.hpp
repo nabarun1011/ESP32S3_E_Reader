@@ -9,8 +9,10 @@
 #include "Interfaces/IBookSettingsRepository.hpp"
 #include "Interfaces/IStorage.hpp"
 #include "UI/Layout/ReaderLayout.hpp"
+#include "UI/Overlays/ReaderOverlay.hpp"
+#include "Domain/Reader/PageIndexedEntry.hpp"
 
-class ReaderScreen : public BaseScreen
+class ReaderScreen : public BaseScreen<ReaderLayout>
 {
 public:
     ReaderScreen(
@@ -23,11 +25,10 @@ public:
     void Enter() override;
     void Exit() override;
     ScreenCommand HandleButton(Button button) override;
-    void Refresh(RefreshMode mode) override;
+    void Draw() override;
 
     void SetBook(const BookInfo &book);
 
-    void UpdateLayout();
     void ApplyReaderSettings();
     void RebuildPageIndex();
 
@@ -37,57 +38,25 @@ public:
 
     void ToggleOverlayMenu();
 
-    void MenuSelect();
-
-    void MenuUp();
-    void MenuDown();
-    void MenuLeft();
-    void MenuRight();
-
 private:
-    enum class State
-    {
-        Reading,
-        Menu
-    };
-
-    enum class OverlayMenuItem
-    {
-        FontSize,
-        Font,
-        Rotation,
-        GoToPage,
-        Library,
-        Resume,
-
-        Count
-    };
-
-    struct PageIndexedEntry
-    {
-        size_t startLine = 0;
-        size_t characterOffset = 0;
-    };
-
-    void
-    DrawOverlayMenu();
+    void DrawOverlayMenu();
     void DrawFooter();
-    void DrawHeader();
 
 private:
     IStorage &m_storage;
     TextDocument &m_document;
     IBookSettingsRepository &m_bookSettingsRepository;
+
     BookInfo m_currentBook;
     String m_text;
 
     TextRenderer m_renderer;
 
+    ReaderOverlay m_overlay;
+
     std::vector<PageIndexedEntry> m_pageStarts;
     size_t FindPageForOffset(size_t offset) const;
     std::vector<WrappedLine> m_wrappedLines;
-
-    State m_state = State::Reading;
 
     ReaderLayout m_layout;
     BookSettings m_bookSettings;

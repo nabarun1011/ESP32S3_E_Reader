@@ -9,7 +9,8 @@ GxEPD2_BW<GxEPD2_420_GDEY042T81, GxEPD2_420_GDEY042T81::HEIGHT>
 
 App::App() : m_storage(), m_bookSettingsRepository(m_storage), m_display(), m_screenManager(), m_deviceSettings(), m_libSettings(),
              m_libraryScreen(m_storage, m_display, m_deviceSettings, m_libSettings), m_document(),
-             m_readerScreen(m_storage, m_document, m_display, m_deviceSettings, m_bookSettingsRepository), m_inputManager(m_screenManager)
+             m_readerScreen(m_storage, m_document, m_display, m_deviceSettings, m_bookSettingsRepository), m_inputManager(m_screenManager),
+             m_deviceSettingsScreen(m_display, m_deviceSettings)
 {
 }
 
@@ -38,7 +39,7 @@ bool App::Init()
     m_display.SetRotation(m_deviceSettings.Orientation);
 
     m_screenManager.SetScreen(
-        &m_libraryScreen);
+        &m_deviceSettingsScreen);
 
     return true;
 }
@@ -56,6 +57,8 @@ void App::Update()
 
     switch (command.Type)
     {
+    case ScreenCommandType::None:
+        break;
     case ScreenCommandType::OpenBook:
         Serial.printf("%s Got open book command: %s\n", TAG, command.Book.path.c_str());
         m_readerScreen.SetBook(command.Book);

@@ -9,6 +9,7 @@
 #include "Platform/Input/InputManager.hpp"
 #include "Platform/Storage/BookSettingsRepository.hpp"
 #include "UI/Screens/LibraryScreen.hpp"
+#include "UI/Screens/DeviceSettingsScreen.hpp"
 
 class App
 {
@@ -32,6 +33,8 @@ private:
     ReaderScreen m_readerScreen;
 
     InputManager m_inputManager;
+
+    DeviceSettingsScreen m_deviceSettingsScreen;
 
 public:
     App();

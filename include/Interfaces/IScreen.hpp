@@ -4,11 +4,14 @@
 #include "Platform/Input/Button.hpp"
 #include "UI/ScreenCommand.hpp"
 
-enum class RefreshMode
+struct RefreshRequest
 {
-    None,
-    Partial,
-    Full
+    bool Full = false;
+
+    int x = 0;
+    int y = 0;
+    int width = 0;
+    int height = 0;
 };
 
 class IScreen
@@ -22,6 +25,9 @@ public:
 
     virtual ScreenCommand HandleButton(Button button) = 0;
 
+    virtual void Refresh(const RefreshRequest &request) = 0;
 
-    virtual void Refresh(RefreshMode mode=RefreshMode::Partial) = 0;
+    virtual void Refresh(bool full = true) = 0;
+
+    virtual void Draw() = 0;
 };
