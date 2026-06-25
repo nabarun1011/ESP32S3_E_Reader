@@ -1,9 +1,9 @@
 #pragma once
 
 #include "UI/Screens/BaseScreen.hpp"
-#include "Domain/Library/LibraryScanner.hpp"
 #include "UI/Layout/LibraryLayout.hpp"
 #include "Domain/Settings/LibrarySettings.hpp"
+#include "Interfaces/IStorage.hpp"
 
 class LibraryScreen : public BaseScreen
 {

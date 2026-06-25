@@ -3,12 +3,12 @@
 #include "Platform/Storage/SDStorage.hpp"
 #include "Platform/Display/EPDDisplay.hpp"
 #include "UI/ScreenManager.hpp"
-#include "UI/Screens/LibraryScreen.hpp"
 #include "UI/Screens/ReaderScreen.hpp"
 #include "Domain/Reader/TextDocument.hpp"
 #include "Domain/Settings/DeviceSettings.hpp"
 #include "Platform/Input/InputManager.hpp"
 #include "Platform/Storage/BookSettingsRepository.hpp"
+#include "UI/Screens/LibraryScreen.hpp"
 
 class App
 {

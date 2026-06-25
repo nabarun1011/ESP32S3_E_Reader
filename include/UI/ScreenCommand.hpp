@@ -10,7 +10,11 @@ enum class ScreenCommandType
 
     OpenLibrary,
 
-    OpenSettings
+    OpenSettings,
+
+    OpenUSBMSC,
+
+    ExitApplication
 };
 
 struct ScreenCommand
