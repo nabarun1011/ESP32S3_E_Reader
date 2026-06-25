@@ -4,7 +4,6 @@
 #include <functional>
 #include <Domain/Reader/ReaderFont.hpp>
 
-
 class IDisplay
 {
 public:
@@ -44,7 +43,8 @@ public:
         int x,
         int y,
         int width,
-        int height) = 0;
+        int height,
+        uint16_t color = 1) = 0;
 
     virtual void DrawLine(int x1, int y1, int x2, int y2) = 0;
 };

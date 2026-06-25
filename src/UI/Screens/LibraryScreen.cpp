@@ -1,4 +1,5 @@
 #include "UI/Screens/LibraryScreen.hpp"
+#include "Utils/NaturalSort.hpp"
 
 const char *TAG = "LibraryScreen";
 
@@ -22,6 +23,8 @@ void LibraryScreen::Exit()
 }
 void LibraryScreen::RebuildLayout()
 {
+    m_layout.HeaderHeight = m_display.LineHeight(m_deviceSettings.UIFont);
+    m_layout.ContentY = m_layout.HeaderHeight;
     m_layout.ContentHeight = m_display.Height() - m_layout.HeaderHeight - m_layout.FooterHeight;
 
     switch (m_libSettings.LibraryView)
@@ -99,13 +102,13 @@ void LibraryScreen::Refresh(RefreshMode mode)
         {
             m_display.RenderFull([this]()
                                  { DrawHeader(); 
-                                    DrawListView(); });
+                                    DrawListView(); 
+                                DrawScrollbar(); });
         }
         else
         {
             RefreshSelection();
         }
-        // DrawScrollbar();
         break;
     case LibraryViewMode::Grid:
         DrawGridView();
@@ -127,71 +130,64 @@ void LibraryScreen::RefreshSelection()
         {
             DrawHeader();
             DrawListView();
+            DrawScrollbar();
         });
 }
 
-// void LibraryScreen::DrawScrollbar()
-// {
-//     if (m_entries.empty())
-//     {
-//         return;
-//     }
+void LibraryScreen::DrawScrollbar()
+{
+    if (m_entries.empty())
+    {
+        return;
+    }
 
-//     if (m_entries.size() <= m_layout.VisibleRows)
-//     {
-//         return;
-//     }
+    const size_t visibleItems = m_layout.VisibleItemsPerPage();
 
-//     const int trackWidth = 4;
+    if (m_entries.size() <= visibleItems)
+    {
+        return;
+    }
 
-//     const int trackX =
-//         m_display.Width() -
-//         trackWidth -
-//         2;
+    const int trackWidth = 4;
 
-//     const int trackY =
-//         m_layout.HeaderHeight;
+    const int trackX = m_display.Width() - trackWidth - 2;
 
-//     const int trackHeight =
-//         m_layout.VisibleRows *
-//         m_layout.ItemHeight;
+    const int trackY = m_layout.ContentY;
 
-//     m_display.DrawRect(
-//         trackX,
-//         trackY,
-//         trackWidth,
-//         trackHeight);
+    const int trackHeight = m_layout.ContentHeight;
 
-//     int thumbHeight =
-//         (trackHeight *
-//          m_layout.VisibleRows) /
-//         m_entries.size();
+    const int thumbWidth = 6;
+    const int thumbX = trackX + trackWidth / 2 - thumbWidth / 2;
 
-//     thumbHeight =
-//         std::max(
-//             8,
-//             thumbHeight);
+    m_display.DrawRect(
+        trackX,
+        trackY,
+        trackWidth,
+        trackHeight);
 
-//     float progress =
-//         static_cast<float>(
-//             m_topIndex) /
-//         static_cast<float>(
-//             m_entries.size() -
-//             m_layout.VisibleRows);
+    // Thumb size
+    int thumbHeight = (trackHeight * visibleItems) / m_entries.size();
 
-//     int thumbY =
-//         trackY +
-//         static_cast<int>(
-//             progress *
-//             (trackHeight -
-//              thumbHeight));
+    thumbHeight = std::max(8, thumbHeight);
 
-//     m_display.FillRect(
-//         trackX,
-//         thumbY,
-//         trackWidth,
-//         thumbHeight);
-// }
+    // Thumb position
+    float progress = static_cast<float>(m_selectedIndex) / std::max(static_cast<size_t>(1), m_entries.size() - 1);
+
+    // Clamp
+    progress =
+        std::max(0.0f, std::min(1.0f, progress));
+
+    // Thumb Y
+    int thumbY = trackY + static_cast<int>(progress * (trackHeight - thumbHeight));
+
+    // Draw thumb
+    m_display.FillRect(
+        thumbX,
+        thumbY,
+        thumbWidth,
+        thumbHeight,
+        0);
+}
 
 void LibraryScreen::LoadDirectory(const String &path)
 {
@@ -241,19 +237,17 @@ void LibraryScreen::SortEntries()
                 return a.isDirectory;
             }
 
-            String aName = a.name;
-            String bName = b.name;
-
-            aName.toLowerCase();
-            bName.toLowerCase();           
-
             switch (m_libSettings.LibrarySorting)
             {
             case LibrarySort::NameAscending:
-                return aName < bName;
+                return NaturalLess(
+                    a.name,
+                    b.name);
 
             case LibrarySort::NameDescending:
-                return aName > bName;
+                return NaturalLess(
+                    b.name,
+                    a.name);
             case LibrarySort::DateNewestFirst:
                 return a.modifiedTime >b.modifiedTime;
 
@@ -266,7 +260,9 @@ void LibraryScreen::SortEntries()
             case LibrarySort::SizeSmallestFirst:
                 return a.size <b.size;
             default:
-                return aName < bName;
+                return NaturalLess(
+                    a.name,
+                    b.name);
             } });
 }
 
@@ -313,7 +309,7 @@ void LibraryScreen::DrawHeader()
 void LibraryScreen::DrawListView()
 {
 
-    int contentWidth = m_display.Width() - 4;
+    int contentWidth = m_display.Width() - 10;
     const auto &books = m_entries;
 
     size_t visibleItems = m_layout.VisibleRows();

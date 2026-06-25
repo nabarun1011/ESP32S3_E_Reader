@@ -38,7 +38,7 @@ public:
 
     void DrawRect(int x, int y, int width, int height) override;
 
-    void FillRect(int x, int y, int width, int height) override;
+    void FillRect(int x, int y, int width, int height, uint16_t color=GxEPD_WHITE) override;
 
     void DrawLine(int x1, int y1, int x2, int y2) override;
 

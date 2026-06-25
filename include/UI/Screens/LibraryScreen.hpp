@@ -50,10 +50,10 @@ public:
     void LoadDirectory(const String &path);
     bool IsSupportedBook(const String &filename);
 
-    // void DrawScrollbar();
 
 private:
     void DrawHeader();
+    void DrawScrollbar();
 
 private:
     IStorage &m_storage;

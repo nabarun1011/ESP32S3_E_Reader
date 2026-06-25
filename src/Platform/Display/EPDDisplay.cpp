@@ -143,14 +143,15 @@ void EPDDisplay::FillRect(
     int x,
     int y,
     int width,
-    int height)
+    int height,
+    uint16_t color)
 {
     m_display.fillRect(
         x,
         y,
         width,
         height,
-        GxEPD_WHITE);
+        color);
 }
 
 void EPDDisplay::DrawLine(

@@ -63,7 +63,14 @@ private:
         Count
     };
 
-    void DrawOverlayMenu();
+    struct PageIndexedEntry
+    {
+        size_t startLine = 0;
+        size_t characterOffset = 0;
+    };
+
+    void
+    DrawOverlayMenu();
     void DrawFooter();
     void DrawHeader();
 
@@ -76,8 +83,7 @@ private:
 
     TextRenderer m_renderer;
 
-    std::vector<size_t> m_pageStarts;
-    std::vector<size_t> m_pageCharacterOffsets;
+    std::vector<PageIndexedEntry> m_pageStarts;
     size_t FindPageForOffset(size_t offset) const;
     std::vector<WrappedLine> m_wrappedLines;
 
