@@ -11,16 +11,15 @@ public:
         IStorage &storage);
 
     bool Load(
-        const String &bookPath,
+        const std::string &bookPath,
         BookSettings &settings) override;
 
-    bool Save(
-        const String &bookPath,
-        const BookSettings &settings) override;
+    bool Save(const std::string &bookPath,
+              const BookSettings &settings) override;
 
 private:
-    String SettingsPath(
-        const String &bookPath) const;
+    std::string SettingsPath(
+        const std::string &bookPath) const;
 
     IStorage &m_storage;
 };

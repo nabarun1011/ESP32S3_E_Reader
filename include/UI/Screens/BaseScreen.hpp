@@ -4,6 +4,7 @@
 #include "Domain/Settings/DeviceSettings.hpp"
 #include "Interfaces/IDisplay.hpp"
 #include "UI/Layout/ScreenLayout.hpp"
+#include "UI/Components/Menu/Menu.hpp"
 
 template <typename T_Layout>
 class BaseScreen : public IScreen
@@ -13,6 +14,29 @@ protected:
     DeviceSettings &m_deviceSettings;
     IDisplay &m_display;
     T_Layout m_layout;
+
+    void DrawLeftText(
+        int x,
+        int y,
+        const std::string &text);
+
+    void DrawRightText(
+        int rightX,
+        int y,
+        const std::string &text);
+
+    void DrawSelectionMarker(bool selected, int y);
+
+    void DrawIndicator(
+        MenuIndicator indicator,
+        int rightX,
+        int y,
+        const std::string &text);
+
+    void DrawAdjustableIndicator(int rightX, int y, const std::string &value);
+
+    void DrawArrowIndicator(int rightX, int y);
+
     void UpdateLayout()
     {
         m_layout.HeaderHeight = m_display.LineHeight(m_deviceSettings.UIFont);
@@ -30,7 +54,7 @@ public:
     {
     }
 
-    void DrawHeader(String text)
+    void DrawHeader(std::string text)
     {
         m_display.DrawLine(
             0,
@@ -95,3 +119,66 @@ public:
         }
     }
 };
+
+template <typename LayoutT>
+void BaseScreen<LayoutT>::DrawLeftText(
+    int x,
+    int y,
+    const std::string &text)
+{
+    m_display.DrawText(
+        x,
+        y,
+        text,
+        m_deviceSettings.UIFont);
+}
+
+template <typename LayoutT>
+void BaseScreen<LayoutT>::DrawRightText(
+    int rightX,
+    int y,
+    const std::string &text)
+{
+    m_display.DrawTextRight(
+        rightX,
+        y,
+        text,
+        m_deviceSettings.UIFont);
+}
+
+template <typename LayoutT>
+void BaseScreen<LayoutT>::DrawSelectionMarker(
+    bool selected,
+    int y)
+{
+    if (!selected)
+        return;
+
+    DrawLeftText(
+        5,
+        y,
+        ">");
+}
+
+template <typename LayoutT>
+void BaseScreen<LayoutT>::DrawAdjustableIndicator(
+    int rightX,
+    int y,
+    const std::string &value)
+{
+    DrawRightText(
+        rightX,
+        y,
+        "< " + value + " >");
+}
+
+template <typename LayoutT>
+void BaseScreen<LayoutT>::DrawArrowIndicator(
+    int rightX,
+    int y)
+{
+    DrawRightText(
+        rightX,
+        y,
+        ">");
+}

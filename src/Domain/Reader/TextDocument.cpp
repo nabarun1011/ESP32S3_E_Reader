@@ -53,7 +53,7 @@ size_t TextDocument::Read(
         size);
 }
 
-String TextDocument::ReadAll()
+std::string TextDocument::ReadAll()
 {
     if (!m_file)
     {
@@ -67,7 +67,7 @@ String TextDocument::ReadAll()
         return "";
     }
 
-    String text;
+    std::string text;
 
     text.reserve(size);
 

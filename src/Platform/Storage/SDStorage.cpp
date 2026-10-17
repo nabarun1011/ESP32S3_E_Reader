@@ -32,12 +32,12 @@ bool SDStorage::Init()
     return true;
 }
 
-bool SDStorage::Exists(const String &path)
+bool SDStorage::Exists(const std::string &path)
 {
     return m_sd.exists(path.c_str());
 }
 
-bool SDStorage::IsDirectory(const String &path)
+bool SDStorage::IsDirectory(const std::string &path)
 {
     FsFile file;
 
@@ -56,7 +56,7 @@ bool SDStorage::IsDirectory(const String &path)
     return result;
 }
 
-size_t SDStorage::FileSize(const String &path)
+size_t SDStorage::FileSize(const std::string &path)
 {
     FsFile file;
 
@@ -74,9 +74,8 @@ size_t SDStorage::FileSize(const String &path)
     return size;
 }
 
-
 std::unique_ptr<IFile> SDStorage::Open(
-    const String &path,
+    const std::string &path,
     FileMode mode)
 {
     FsFile file;
@@ -101,15 +100,14 @@ std::unique_ptr<IFile> SDStorage::Open(
 }
 
 std::vector<DirectoryEntry> SDStorage::ListDirectory(
-    const String &path)
+    const std::string &path)
 {
+    Serial.printf("%s:  ListDirectory called with path = '%s'\n", TAG, path.c_str());
     std::vector<DirectoryEntry> entries;
 
     FsFile dir;
 
-    if (!dir.open(
-            path.c_str(),
-            O_RDONLY))
+    if (!dir.open(path.c_str(), O_RDONLY))
     {
         Serial.printf("%s :Failed to open directory: %s\n", TAG, path.c_str());
         return entries;

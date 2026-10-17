@@ -39,7 +39,7 @@ bool App::Init()
     m_display.SetRotation(m_deviceSettings.Orientation);
 
     m_screenManager.SetScreen(
-        &m_deviceSettingsScreen);
+        &m_libraryScreen);
 
     return true;
 }
@@ -63,12 +63,17 @@ void App::Update()
         Serial.printf("%s Got open book command: %s\n", TAG, command.Book.path.c_str());
         m_readerScreen.SetBook(command.Book);
         m_screenManager.SetScreen(&m_readerScreen);
-
         break;
     case ScreenCommandType::OpenLibrary:
         m_screenManager.SetScreen(&m_libraryScreen);
         break;
-
+    case ScreenCommandType::OpenSettings:
+        m_screenManager.SetScreen(&m_deviceSettingsScreen);
+        break;
+    case ScreenCommandType::OpenUSBMSC:
+        break;
+    case ScreenCommandType::ExitApplication:
+        break;
     default:
         break;
     }

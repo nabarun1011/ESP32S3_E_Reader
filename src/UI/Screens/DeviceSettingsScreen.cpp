@@ -11,20 +11,13 @@ DeviceSettingsScreen::DeviceSettingsScreen(
 
 void DeviceSettingsScreen::Enter()
 {
-    m_selectedItem = 0;
+    BuildMenu();
+    UpdateMenuValues();
 
     UpdateLayout();
 
     Refresh(true);
 }
-
-// void DeviceSettingsScreen::UpdateLayout()
-// {
-//     m_layout.HeaderHeight = m_display.LineHeight(m_deviceSettings.UIFont);
-//     m_layout.ContentY = m_layout.HeaderHeight + m_display.LineHeight(m_deviceSettings.UIFont) * 0.8;
-//     m_layout.FooterHeight = m_display.LineHeight(m_deviceSettings.UIFont);
-//     m_layout.ContentHeight = m_display.Height() - m_layout.FooterHeight - m_layout.HeaderHeight;
-// }
 
 void DeviceSettingsScreen::Exit()
 {
@@ -34,6 +27,57 @@ void DeviceSettingsScreen::Draw()
 {
     DrawHeader("Device Settings");
     DrawMenu();
+}
+
+void DeviceSettingsScreen::DrawMenu()
+{
+    int y = m_layout.ContentY + 10;
+
+    for (size_t i = 0; i < m_menu.Count(); ++i)
+    {
+        DrawMenuRow(
+            m_menu.Item(i),
+            m_menu.IsSelected(i),
+            y);
+
+        y += m_display.LineHeight(m_deviceSettings.UIFont);
+    }
+}
+
+void DeviceSettingsScreen::DrawMenuRow(
+    const MenuItem &item,
+    bool selected,
+    int y)
+{
+    DrawSelectionMarker(selected, y);
+
+    DrawLeftText(
+        20,
+        y,
+        item.Label);
+
+    switch (item.Indicator)
+    {
+    case MenuIndicator::Adjustable:
+
+        DrawAdjustableIndicator(
+            m_display.Width() - 5,
+            y,
+            item.valueText);
+
+        break;
+
+    case MenuIndicator::Arrow:
+
+        DrawArrowIndicator(
+            m_display.Width() - 5,
+            y);
+
+        break;
+
+    default:
+        break;
+    }
 }
 
 ScreenCommand DeviceSettingsScreen::HandleButton(
@@ -51,10 +95,14 @@ ScreenCommand DeviceSettingsScreen::HandleButton(
 
     case Button::Left:
         PreviousValue();
+        UpdateMenuValues();
+        UpdateLayout();
         break;
 
     case Button::Right:
         NextValue();
+        UpdateMenuValues();
+        UpdateLayout();
         break;
 
     case Button::Select:
@@ -72,87 +120,135 @@ ScreenCommand DeviceSettingsScreen::HandleButton(
     return {};
 }
 
-String DeviceSettingsScreen::GetMenuText(
-    DeviceSettingItem item) const
-{
-    switch (item)
-    {
-    case DeviceSettingItem::Orientation:
-        return "Orientation: [" +
-               String(m_deviceSettings.Orientation) +
-               "]";
-
-    case DeviceSettingItem::Font:
-        return "UI Font: [" +
-               String(ToString(m_deviceSettings.UIFont)) +
-               "]";
-
-    case DeviceSettingItem::USBMSC:
-        return "USB Mass Storage";
-
-    default:
-        return "";
-    }
-}
-
-void DeviceSettingsScreen::DrawMenu()
-{
-    int y = m_layout.ContentY + 10;
-
-    for (size_t i = 0;
-         i < static_cast<size_t>(DeviceSettingItem::Count);
-         ++i)
-    {
-        String text = GetMenuText(static_cast<DeviceSettingItem>(i));
-
-        if (i == m_selectedItem)
-        {
-            text = "> " + text;
-        }
-
-        m_display.DrawText(
-            20,
-            y,
-            text,
-            m_deviceSettings.UIFont);
-
-        y +=
-            m_display.LineHeight(
-                m_deviceSettings.UIFont) +
-            4;
-    }
-}
-
 void DeviceSettingsScreen::MoveUp()
 {
-    if (m_selectedItem > 0)
-    {
-        m_selectedItem--;
-    }
-    else
-    {
-        m_selectedItem = static_cast<size_t>(DeviceSettingItem::Count) - 1;
-    }
+    m_menu.MoveUp();
 }
 
 void DeviceSettingsScreen::MoveDown()
 {
-    if (m_selectedItem < static_cast<size_t>(DeviceSettingItem::Count) - 1)
+    m_menu.MoveDown();
+}
+
+void DeviceSettingsScreen::BuildMenu()
+{
+    m_menu.Clear();
+
+    for (int i = 0; i < static_cast<int>(DeviceSettingItem::Count); i++)
     {
-        m_selectedItem++;
+        switch (static_cast<DeviceSettingItem>(i))
+        {
+        case DeviceSettingItem::Font:
+            m_menu.Add({"UI Font", "", MenuIndicator::Adjustable});
+            break;
+        case DeviceSettingItem::Orientation:
+            m_menu.Add({"Orientation", "", MenuIndicator::Adjustable});
+            break;
+        case DeviceSettingItem::AutoSleep:
+            m_menu.Add({"Auto Sleep", "", MenuIndicator::Adjustable});
+            break;
+        case DeviceSettingItem::Wifi:
+            m_menu.Add({"WiFi", "", MenuIndicator::Adjustable});
+            break;
+        case DeviceSettingItem::USBMSC:
+            m_menu.Add({"USB Mass Storage", "", MenuIndicator::Arrow});
+            break;
+        default:
+            break;
+        }
     }
-    else
+}
+
+void DeviceSettingsScreen::UpdateMenuValues()
+{
+    std::string orientationText = "";
+    switch (m_deviceSettings.Orientation)
     {
-        m_selectedItem = 0;
+    case 0:
+        orientationText = "Landscape";
+        break;
+    case 1:
+        orientationText = "Inverted Portrait";
+        break;
+    case 2:
+        orientationText = "Inverted Landscape";
+        break;
+    case 3:
+        orientationText = "Portrait";
+        break;
     }
+    m_menu.Item(static_cast<size_t>(DeviceSettingItem::Orientation)).valueText = orientationText;
+    m_menu.Item(static_cast<size_t>(DeviceSettingItem::Font)).valueText = ToString(m_deviceSettings.UIFont);
+    m_menu.Item(static_cast<size_t>(DeviceSettingItem::AutoSleep)).valueText = std::to_string(m_deviceSettings.AutoSleep);
+    m_menu.Item(static_cast<size_t>(DeviceSettingItem::Wifi)).valueText = m_deviceSettings.WifiEnabled ? "On" : "Off";
 }
 
 void DeviceSettingsScreen::PreviousValue()
 {
+    switch (static_cast<DeviceSettingItem>(m_menu.GetSelectedIndex()))
+    {
+    case DeviceSettingItem::Orientation:
+    {
+        if (m_deviceSettings.Orientation <= 0)
+        {
+            m_deviceSettings.Orientation = 3;
+        }
+        else
+        {
+            m_deviceSettings.Orientation--;
+        }
+    }
+    break;
+
+    case DeviceSettingItem::Font:
+    {
+        int nextFOntIndex = static_cast<int>(m_deviceSettings.UIFont) - 1;
+        // If index greater than last index, then set font index to first index
+        if (nextFOntIndex < 0)
+        {
+            nextFOntIndex = static_cast<int>(ReaderFont::Count) - 1;
+        }
+        m_deviceSettings.UIFont = static_cast<ReaderFont>(nextFOntIndex);
+        Serial.printf("Reader font changed to = %s\n", ToString(m_deviceSettings.UIFont));
+
+        break;
+    }
+    default:
+        break;
+    }
+
+    
 }
 
 void DeviceSettingsScreen::NextValue()
 {
+    switch (static_cast<DeviceSettingItem>(m_menu.GetSelectedIndex()))
+    {
+    case DeviceSettingItem::Orientation:
+    {
+        if (m_deviceSettings.Orientation >= 3)
+            m_deviceSettings.Orientation = 0;
+        else
+            m_deviceSettings.Orientation++;
+    }
+    break;
+
+    case DeviceSettingItem::Font:
+    {
+        int prevFontIndex = static_cast<int>(m_deviceSettings.UIFont) + 1;
+        // If index greater than last index, then set font index to first index
+        if (prevFontIndex >= static_cast<int>(ReaderFont::Count))
+        {
+            prevFontIndex = 0;
+        }
+        m_deviceSettings.UIFont = static_cast<ReaderFont>(prevFontIndex);
+        Serial.printf("Reader font changed to = %s\n", ToString(m_deviceSettings.UIFont));
+
+        break;
+    }
+    default:
+        break;
+    }
 }
 
 ScreenCommand DeviceSettingsScreen::Activate()

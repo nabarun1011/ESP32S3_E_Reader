@@ -24,7 +24,7 @@ public:
 
     int LineHeight(ReaderFont font) const override;
 
-    int MeasureTextWidth(const String &text, ReaderFont font) override;
+    int GetTextWidth(const std::string &text, ReaderFont font) override;
 
     // void SetFont(const ReaderFont font) override;
 
@@ -34,11 +34,17 @@ public:
 
     void SetRotation(uint8_t rotation) override;
 
-    void DrawText(int x, int y, const String &text, ReaderFont font) override;
+    void DrawText(int x, int y, const std::string &text, ReaderFont font) override;
+
+    void DrawTextRight(
+        int rightX,
+        int y,
+        const std::string &text,
+        ReaderFont font) override;
 
     void DrawRect(int x, int y, int width, int height) override;
 
-    void FillRect(int x, int y, int width, int height, uint16_t color=GxEPD_WHITE) override;
+    void FillRect(int x, int y, int width, int height, uint16_t color = GxEPD_WHITE) override;
 
     void DrawLine(int x1, int y1, int x2, int y2) override;
 

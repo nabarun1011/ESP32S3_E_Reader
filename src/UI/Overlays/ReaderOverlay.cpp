@@ -1,5 +1,7 @@
 #include "UI/Overlays/ReaderOverlay.hpp"
 
+static const char *TAG = "ReaderOverlay";
+
 ReaderOverlay::ReaderOverlay(
     IDisplay &display,
     DeviceSettings &deviceSettings,
@@ -18,10 +20,16 @@ ReaderOverlay::ReaderOverlay(
 {
 }
 
+void ReaderOverlay::Show()
+{
+    BaseOverlay::Show();
+    BuildMenu();
+}
+
 void ReaderOverlay::Draw()
 {
     const int panelX = 0;
-    const int panelY = 0;
+    const int panelY = m_display.LineHeight(m_deviceSettings.UIFont) * 0.8;
 
     const int panelW =
         m_display.Width();
@@ -31,13 +39,13 @@ void ReaderOverlay::Draw()
 
     m_display.FillRect(
         panelX,
-        panelY,
+        0,
         panelW,
         panelH);
 
     m_display.DrawRect(
         panelX,
-        panelY,
+        0,
         panelW,
         panelH);
 
@@ -48,50 +56,62 @@ void ReaderOverlay::Draw()
 
     m_display.DrawText(
         10,
-        panelY + 5,
+        panelY,
         "Reader Settings", m_deviceSettings.UIFont);
 
     int y = panelY + 40;
 
-    for (size_t i = 0; i < static_cast<size_t>(OverlayMenuItem::Count); i++)
+    for (size_t i = 0; i < m_menu.Count(); ++i)
     {
-        String text;
+        DrawMenuRow(
+            m_menu.Item(i),
+            m_menu.IsSelected(i),
+            y);
 
-        switch (static_cast<OverlayMenuItem>(i))
-        {
-        case OverlayMenuItem::Font:
-            text = "Font: [" + String(ToString(m_bookSettings.Font)) + "]";
-            break;
-        case OverlayMenuItem::FontSize:
-            text = "Font Size: [" + String(m_bookSettings.FontSize) + "]";
-            break;
-        case OverlayMenuItem::Rotation:
-            text = "Rotation: [" + String(m_deviceSettings.Orientation) + "]";
-            break;
-        case OverlayMenuItem::GoToPage:
-            text = "Go To Page: [" + String(m_readerSettings.GoToPage) + "/" + String(m_pages.size() - 1) + "]";
-            break;
-        case OverlayMenuItem::Library:
-            text = "Library";
-            break;
-        case OverlayMenuItem::Resume:
-            text = "Resume";
-            break;
-        default:
-            break;
-        }
+        y += m_display.LineHeight(m_deviceSettings.UIFont);
+    }
+}
 
-        if (i == m_readerSettings.SelectedMenuItem)
-        {
-            text = "> " + text;
-        }
-
+void ReaderOverlay::DrawMenuRow(const MenuItem &item, bool selected, int y)
+{
+    if (selected)
+    {
         m_display.DrawText(
-            20,
+            5,
             y,
-            text, m_deviceSettings.UIFont);
+            ">",
+            m_deviceSettings.UIFont);
+    }
 
-        y += m_display.LineHeight(m_deviceSettings.UIFont) + 4;
+    // Draw left label text
+    m_display.DrawText(
+        20,
+        y,
+        item.Label,
+        m_deviceSettings.UIFont);
+
+    // Draw right part
+    switch (item.Indicator)
+    {
+    case MenuIndicator::Adjustable:
+        m_display.DrawTextRight(
+            m_display.Width() - 5,
+            y,
+            "<" + item.valueText + ">",
+            m_deviceSettings.UIFont);
+
+        break;
+
+    case MenuIndicator::Arrow:
+        m_display.DrawTextRight(
+            m_display.Width() - 5,
+            y,
+            ">",
+            m_deviceSettings.UIFont);
+        break;
+
+    default:
+        break;
     }
 }
 
@@ -100,23 +120,24 @@ void ReaderOverlay::HandleButton(Button button)
     switch (button)
     {
     case Button::Up:
-        MenuUp();
-
+        m_menu.MoveUp();
+        UpdateMenuValues();
         break;
     case Button::Down:
-        MenuDown();
-
+        m_menu.MoveDown();
+        UpdateMenuValues();
         break;
     case Button::Left:
         MenuLeft();
-
+        UpdateMenuValues();
         break;
     case Button::Right:
         MenuRight();
-
+        UpdateMenuValues();
         break;
     case Button::Select:
         MenuSelect();
+        UpdateMenuValues();
         break;
     case Button::Back:
         Hide();
@@ -126,27 +147,11 @@ void ReaderOverlay::HandleButton(Button button)
     }
 }
 
-void ReaderOverlay::MenuUp()
-{
-    if (m_readerSettings.SelectedMenuItem > 0)
-    {
-        m_readerSettings.SelectedMenuItem--;
-    }
-}
-
-void ReaderOverlay::MenuDown()
-{
-    if (m_readerSettings.SelectedMenuItem < static_cast<size_t>(OverlayMenuItem::Count) - 1)
-    {
-        m_readerSettings.SelectedMenuItem++;
-    }
-}
-
 void ReaderOverlay::MenuLeft()
 {
     switch (
         static_cast<OverlayMenuItem>(
-            m_readerSettings.SelectedMenuItem))
+            m_menu.GetSelectedIndex()))
     {
     case OverlayMenuItem::Font:
     {
@@ -169,7 +174,7 @@ void ReaderOverlay::MenuLeft()
         m_updateLayout();
         break;
 
-    case OverlayMenuItem::Rotation:
+    case OverlayMenuItem::Orientation:
 
         if (m_deviceSettings.Orientation == 0)
         {
@@ -203,7 +208,7 @@ void ReaderOverlay::MenuRight()
 {
     switch (
         static_cast<OverlayMenuItem>(
-            m_readerSettings.SelectedMenuItem))
+            m_menu.GetSelectedIndex()))
     {
     case OverlayMenuItem::Font:
     {
@@ -214,7 +219,7 @@ void ReaderOverlay::MenuRight()
             nextFontIndex = 0;
         }
         m_bookSettings.Font = static_cast<ReaderFont>(nextFontIndex);
-        Serial.printf("Reader font changed to = %s\n", ToString(m_bookSettings.Font));
+        Serial.printf("Reader font changed to = %s\n", ToString(m_bookSettings.Font).c_str());
         m_updateLayout();
         break;
     }
@@ -227,7 +232,7 @@ void ReaderOverlay::MenuRight()
         m_updateLayout();
         break;
 
-    case OverlayMenuItem::Rotation:
+    case OverlayMenuItem::Orientation:
 
         if (m_deviceSettings.Orientation >= 3)
         {
@@ -257,11 +262,102 @@ void ReaderOverlay::MenuRight()
     }
 }
 
+void ReaderOverlay::BuildMenu()
+{
+    Serial.printf("%s : BuildMenu\n", TAG);
+    m_menu.Clear();
+
+    for (int i = 0;
+         i < static_cast<int>(OverlayMenuItem::Count);
+         ++i)
+    {
+        m_menu.Add(GetMenuItem(
+            static_cast<OverlayMenuItem>(i)));
+    }
+
+    UpdateMenuValues();
+}
+
+void ReaderOverlay::UpdateMenuValues()
+{
+    m_menu.Item(static_cast<size_t>(OverlayMenuItem::Font)).valueText = ToString(m_bookSettings.Font);
+
+    m_menu.Item(static_cast<size_t>(OverlayMenuItem::FontSize)).valueText = std::to_string(m_bookSettings.FontSize);
+
+    std::string orientationText = "";
+    switch (m_deviceSettings.Orientation)
+    {
+    case 0:
+        orientationText = "Landscape";
+        break;
+    case 1:
+        orientationText = "Inverted Portrait";
+        break;
+    case 2:
+        orientationText = "Inverted Landscape";
+        break;
+    case 3:
+        orientationText = "Portrait";
+        break;
+    }
+    m_menu.Item(static_cast<size_t>(OverlayMenuItem::Orientation)).valueText = orientationText;
+
+    m_menu.Item(static_cast<size_t>(OverlayMenuItem::GoToPage)).valueText = std::to_string(m_readerSettings.GoToPage) +
+                                                                            "/" +
+                                                                            std::to_string(m_pages.size() - 1);
+}
+
+MenuItem ReaderOverlay::GetMenuItem(
+    OverlayMenuItem item)
+{
+    switch (item)
+    {
+    case OverlayMenuItem::Font:
+
+        return {
+            "Font",
+            "",
+            MenuIndicator::Adjustable};
+
+    case OverlayMenuItem::FontSize:
+
+        return {
+            "Font Size",
+            "",
+            MenuIndicator::Adjustable};
+
+    case OverlayMenuItem::Orientation:
+
+        return {
+            "Orientation",
+            "",
+            MenuIndicator::Adjustable};
+
+    case OverlayMenuItem::GoToPage:
+
+        return {
+            "Go To Page",
+            "",
+            MenuIndicator::Adjustable};
+    case OverlayMenuItem::Resume:
+        return {
+            "Resume",
+            "",
+            MenuIndicator::Arrow};
+    case OverlayMenuItem::Library:
+        return {
+            "Library",
+            "",
+            MenuIndicator::Arrow};
+    }
+    return {};
+}
+
 void ReaderOverlay::MenuSelect()
 {
     switch (
         static_cast<OverlayMenuItem>(
-            m_readerSettings.SelectedMenuItem))
+            m_menu.GetSelectedIndex()))
     {
     case OverlayMenuItem::Resume: // Resume
         Hide();
@@ -270,7 +366,7 @@ void ReaderOverlay::MenuSelect()
     case OverlayMenuItem::GoToPage: // Go To Page
         m_goToPage(m_readerSettings.GoToPage);
         Hide();
-        break;  
+        break;
     default:
         break;
     }

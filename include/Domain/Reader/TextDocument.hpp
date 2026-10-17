@@ -33,7 +33,7 @@ public:
         char *buffer,
         size_t maxSize);
 
-    String ReadAll() override;
+    std::string ReadAll() override;
 
 private:
     std::unique_ptr<IFile> m_file;

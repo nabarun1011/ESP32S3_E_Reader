@@ -1,4 +1,5 @@
 #include "Domain/Reader/TextRenderer.hpp"
+#include "Utils/StringUtils.hpp"
 
 TextRenderer::TextRenderer(
     IDisplay &display)
@@ -19,34 +20,34 @@ size_t TextRenderer::MaxVisibleLines(int availableHeight) const
 
 std::vector<WrappedLine>
 TextRenderer::WrapDocument(
-    const String &text,
+    const std::string &text,
     int maxWidth)
 {
     std::vector<WrappedLine> lines;
 
-    String normalized = text;
+    std::string normalized = text;
 
-    normalized.replace("\r\n", "\n");
-    normalized.replace('\r', '\n');
+    StringUtils::Replace(normalized, "\r\n", "\n");
+    StringUtils::Replace(normalized, '\r', '\n');
 
     int start = 0;
 
     while (start < normalized.length())
     {
-        int end =
-            normalized.indexOf(
+        size_t end =
+            normalized.find(
                 '\n',
                 start);
 
-        if (end == -1)
+        if (end == std::string::npos)
         {
             end = normalized.length();
         }
 
-        String paragraph =
-            normalized.substring(
+        std::string paragraph =
+            normalized.substr(
                 start,
-                end);
+                end - start);
 
         auto wrapped =
             WrapText(
@@ -109,8 +110,6 @@ Page TextRenderer::BuildPageFromLines(
     return page;
 }
 
-
-
 void TextRenderer::DrawPage(
     int x,
     int y,
@@ -131,7 +130,7 @@ void TextRenderer::DrawPage(
 }
 
 std::vector<WrappedLine> TextRenderer::WrapText(
-    const String &text,
+    const std::string &text,
     size_t paragraphOffset,
     int maxWidth)
 {
@@ -140,35 +139,35 @@ std::vector<WrappedLine> TextRenderer::WrapText(
     size_t currentLineOffset = paragraphOffset;
     size_t currentWordOffset = paragraphOffset;
 
-    String currentLine;
+    std::string currentLine;
 
     int start = 0;
 
     while (start < text.length())
     {
-        int end = text.indexOf(' ', start);
+        size_t end = text.find(' ', start);
 
-        if (end == -1)
+        if (end == std::string::npos)
         {
             end = text.length();
         }
 
         currentWordOffset = start + paragraphOffset;
-        String word =
-            text.substring(start, end);
+        std::string word =
+            text.substr(start, end - start);
 
-        String candidate =
-            currentLine.isEmpty()
+        std::string candidate =
+            currentLine.empty()
                 ? word
                 : currentLine + " " + word;
 
-        if (m_display.MeasureTextWidth(candidate, m_font) <= maxWidth)
+        if (m_display.GetTextWidth(candidate, m_font) <= maxWidth)
         {
             currentLine = candidate;
         }
         else
         {
-            if (!currentLine.isEmpty())
+            if (!currentLine.empty())
             {
                 WrappedLine line;
 
@@ -186,7 +185,7 @@ std::vector<WrappedLine> TextRenderer::WrapText(
         start = end + 1;
     }
 
-    if (!currentLine.isEmpty())
+    if (!currentLine.empty())
     {
         WrappedLine line;
 

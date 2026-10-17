@@ -1,7 +1,8 @@
 #include "UI/Screens/LibraryScreen.hpp"
 #include "Utils/NaturalSort.hpp"
+#include "Utils/StringUtils.hpp"
 
-const char *TAG = "LibraryScreen";
+static const char *TAG = "LibraryScreen";
 
 LibraryScreen::LibraryScreen(
     IStorage &storage, IDisplay &display,
@@ -56,11 +57,11 @@ bool LibraryScreen::IsRootDirectory() const
     return m_currentPath == m_rootBookPath;
 }
 
-String LibraryScreen::GetParentPath(const String &path)
+std::string LibraryScreen::GetParentPath(const std::string &path)
 {
     // Find position of last "/"
     // Eg. /Books/Adevnture/AdventureStory.txt
-    int pos = path.lastIndexOf('/');
+    int pos = path.rfind('/');
 
     // If path is /Books
     //  "/" position will be 0
@@ -72,7 +73,7 @@ String LibraryScreen::GetParentPath(const String &path)
 
     // If path is /Books/Adventure/AdventureStory.txt
     // Returns /Books/Adventure
-    return path.substring(0, pos);
+    return path.substr(0, pos - 0);
 }
 
 void LibraryScreen::EnsureSelectionVisible()
@@ -172,7 +173,7 @@ void LibraryScreen::DrawScrollbar()
         0);
 }
 
-void LibraryScreen::LoadDirectory(const String &path)
+void LibraryScreen::LoadDirectory(const std::string &path)
 {
     m_currentPath = path;
 
@@ -247,15 +248,15 @@ void LibraryScreen::SortEntries()
             } });
 }
 
-bool LibraryScreen::IsSupportedBook(const String &filename)
+bool LibraryScreen::IsSupportedBook(const std::string &filename)
 {
-    String lower = filename;
+    std::string lower = filename;
 
-    lower.toLowerCase();
+    StringUtils::ToLower(lower);
 
-    return lower.endsWith(".txt") ||
-           lower.endsWith(".md") ||
-           lower.endsWith(".epub");
+    return StringUtils::EndsWith(lower, ".txt") ||
+           StringUtils::EndsWith(lower, ".md") ||
+           StringUtils::EndsWith(lower, ".epub");
 }
 
 bool LibraryScreen::IsHiddenEntry(
@@ -266,8 +267,7 @@ bool LibraryScreen::IsHiddenEntry(
         return false;
     }
 
-    return entry.name.endsWith(
-        ".settings");
+    return StringUtils::EndsWith(entry.name, ".settings");
 }
 
 void LibraryScreen::DrawListView()
@@ -287,7 +287,7 @@ void LibraryScreen::DrawListView()
 
     for (size_t i = m_firstVisibleIndex; i < endIndex; ++i)
     {
-        String text;
+        std::string text;
 
         if (i == m_selectedIndex)
         {
@@ -353,6 +353,15 @@ ScreenCommand LibraryScreen::HandleButton(Button button)
         break;
     case Button::Select:
         return OpenSelectedEntry();
+        break;
+    case Button::Back:
+        if (IsRootDirectory())
+        {
+            return {ScreenCommandType::OpenSettings};
+        }
+        // Return to parent dir
+        LoadDirectory(GetParentPath(m_currentPath));
+        Refresh(true);
         break;
     default:
         break;
@@ -455,6 +464,7 @@ ScreenCommand LibraryScreen::OpenSelectedEntry()
     if (entry.isDirectory)
     {
         LoadDirectory(entry.path);
+        Refresh(true);
         return {};
     }
 

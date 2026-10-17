@@ -6,11 +6,11 @@ class IBookSettingsRepository
 {
 public:
     virtual bool Load(
-        const String &bookPath,
+        const std::string &bookPath,
         BookSettings &settings) = 0;
 
     virtual bool Save(
-        const String &bookPath,
+        const std::string &bookPath,
         const BookSettings &settings) = 0;
 
     virtual ~IBookSettingsRepository() = default;

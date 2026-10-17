@@ -28,7 +28,7 @@ bool EPDDisplay::Init()
 void EPDDisplay::RenderFull(
     const std::function<void()> &drawFunc)
 {
-    Serial.printf("Display full refreshed\n");
+    // Serial.printf("Display full refreshed\n");
     m_display.setFullWindow();
 
     m_display.firstPage();
@@ -46,7 +46,7 @@ void EPDDisplay::RenderPartial(
     int h,
     const std::function<void()> &drawFunc)
 {
-    Serial.printf("Display partial refreshed\n");
+    // Serial.printf("Display partial refreshed\n");
     m_display.setPartialWindow(
         x,
         y,
@@ -77,8 +77,8 @@ int EPDDisplay::LineHeight(ReaderFont font) const
     return GetFont(font)->yAdvance;
 }
 
-int EPDDisplay::MeasureTextWidth(
-    const String &text,
+int EPDDisplay::GetTextWidth(
+    const std::string &text,
     ReaderFont font)
 {
     m_display.setFont(GetFont(font));
@@ -86,7 +86,7 @@ int EPDDisplay::MeasureTextWidth(
     int16_t x1, y1;
     uint16_t w, h;
     m_display.getTextBounds(
-        text,
+        text.c_str(),
         0,
         0,
         &x1,
@@ -113,7 +113,7 @@ void EPDDisplay::SetRotation(
 void EPDDisplay::DrawText(
     int x,
     int y,
-    const String &text,
+    const std::string &text,
     ReaderFont font)
 {
     m_display.setFont(GetFont(font));
@@ -122,7 +122,22 @@ void EPDDisplay::DrawText(
         x,
         y);
 
-    m_display.print(text);
+    m_display.printf(text.c_str());
+}
+
+void EPDDisplay::DrawTextRight(
+    int rightX,
+    int y,
+    const std::string &text,
+    ReaderFont font)
+{
+    int width = GetTextWidth(text, font);
+
+    DrawText(
+        rightX - width,
+        y,
+        text,
+        font);
 }
 
 void EPDDisplay::DrawRect(

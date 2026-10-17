@@ -6,8 +6,8 @@ static bool IsDigit(char c)
 }
 
 int NaturalCompare(
-    const String &a,
-    const String &b)
+    const std::string &a,
+    const std::string &b)
 {
     size_t ia = 0;
     size_t ib = 0;
@@ -124,8 +124,8 @@ int NaturalCompare(
 }
 
 bool NaturalLess(
-    const String &a,
-    const String &b)
+    const std::string &a,
+    const std::string &b)
 {
     return NaturalCompare(a, b) < 0;
 }

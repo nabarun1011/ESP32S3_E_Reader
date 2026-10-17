@@ -17,7 +17,7 @@ public:
 
     virtual int LineHeight(ReaderFont font) const = 0;
 
-    virtual int MeasureTextWidth(const String &text, ReaderFont font) = 0;
+    virtual int GetTextWidth(const std::string &text, ReaderFont font) = 0;
 
     virtual bool Init() = 0;
 
@@ -30,7 +30,7 @@ public:
     virtual void DrawText(
         int x,
         int y,
-        const String &text,
+        const std::string &text,
         ReaderFont font) = 0;
 
     virtual void DrawRect(
@@ -47,4 +47,10 @@ public:
         uint16_t color = 1) = 0;
 
     virtual void DrawLine(int x1, int y1, int x2, int y2) = 0;
+
+    virtual void DrawTextRight(
+        int rightX,
+        int y,
+        const std::string &text,
+        ReaderFont font);
 };

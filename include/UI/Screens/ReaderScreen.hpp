@@ -48,7 +48,7 @@ private:
     IBookSettingsRepository &m_bookSettingsRepository;
 
     BookInfo m_currentBook;
-    String m_text;
+    std::string m_text;
 
     TextRenderer m_renderer;
 
@@ -57,8 +57,7 @@ private:
     std::vector<PageIndexedEntry> m_pageStarts;
     size_t FindPageForOffset(size_t offset) const;
     std::vector<WrappedLine> m_wrappedLines;
-
-    ReaderLayout m_layout;
+    
     BookSettings m_bookSettings;
     ReaderSettings m_readerSettings;
 };

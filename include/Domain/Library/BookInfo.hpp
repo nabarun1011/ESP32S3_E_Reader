@@ -1,11 +1,11 @@
 #pragma once
-#include <Arduino.h>
 
+#include <string>
 
 // Represents individual book info in library
 struct BookInfo
 {
-    String title;
-    String path;
-    String extension;
+    std::string title;
+    std::string path;
+    std::string extension;
 };

@@ -2,6 +2,7 @@
 
 #include "UI/Screens/BaseScreen.hpp"
 #include "UI/Layout/DeviceSettingsLayout.hpp"
+#include "UI/Components/Menu/Menu.hpp"
 
 class DeviceSettingsScreen : public BaseScreen<DeviceSettingsLayout>
 {
@@ -19,9 +20,15 @@ public:
     ScreenCommand HandleButton(
         Button button) override;
 
-
 private:
     void DrawMenu();
+
+    void DrawMenuRow(
+        const MenuItem &item,
+        bool selected,
+        int y);
+
+    void BuildMenu();
 
     void MoveUp();
 
@@ -33,16 +40,20 @@ private:
 
     ScreenCommand Activate();
 
+    void UpdateMenuValues();
+
     enum class DeviceSettingItem
     {
         Font,
         Orientation,
+        AutoSleep,
+        Wifi,
         USBMSC,
         Count
     };
 
-    String GetMenuText(DeviceSettingItem item) const;
+    // MenuItem GetMenuText(DeviceSettingItem item) const;
 
 private:
-    size_t m_selectedItem = 0;
+    Menu m_menu;
 };

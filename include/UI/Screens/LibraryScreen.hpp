@@ -5,8 +5,6 @@
 #include "Domain/Settings/LibrarySettings.hpp"
 #include "Interfaces/IStorage.hpp"
 
-
-
 class LibraryScreen : public BaseScreen<LibraryLayout>
 {
 public:
@@ -38,7 +36,7 @@ public:
     // To check if entry is supported book or directory or hidden item
     bool IsHiddenEntry(const DirectoryEntry &entry);
 
-    String GetParentPath(const String &path);
+    std::string GetParentPath(const std::string &path);
 
     bool IsRootDirectory() const;
 
@@ -49,16 +47,16 @@ public:
 
     void RebuildLayout();
 
-    void LoadDirectory(const String &path);
-    bool IsSupportedBook(const String &filename);
+    void LoadDirectory(const std::string &path);
+    bool IsSupportedBook(const std::string &filename);
 
 private:
     void DrawScrollbar();
 
 private:
     IStorage &m_storage;
-    String m_rootBookPath = "/Books";
-    String m_currentPath = "/Books";
+    std::string m_rootBookPath = "/Books";
+    std::string m_currentPath = "/Books";
 
     LibrarySettings m_libSettings;
 

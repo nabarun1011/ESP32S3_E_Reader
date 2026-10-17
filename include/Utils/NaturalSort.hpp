@@ -3,9 +3,9 @@
 #include <Arduino.h>
 
 int NaturalCompare(
-    const String &a,
-    const String &b);
+    const std::string &a,
+    const std::string &b);
 
 bool NaturalLess(
-    const String &a,
-    const String &b);
+    const std::string &a,
+    const std::string &b);

@@ -2,7 +2,7 @@
 
 struct WrappedLine
 {
-    String Text;
+    std::string Text;
 
     size_t StartOffset = 0;
 };

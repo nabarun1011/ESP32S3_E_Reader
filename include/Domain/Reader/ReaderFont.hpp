@@ -1,7 +1,5 @@
 #pragma once
 
-#include <Arduino.h>
-
 enum class ReaderFont
 {
     Serif,
@@ -11,7 +9,7 @@ enum class ReaderFont
     Count
 };
 
-inline const char *ToString(ReaderFont font)
+inline const std::string ToString(ReaderFont font)
 {
     switch (font)
     {

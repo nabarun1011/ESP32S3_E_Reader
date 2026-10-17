@@ -1,12 +1,10 @@
 #pragma once
 
-#include <Arduino.h>
-
 struct DirectoryEntry
 {
-    String name;
+    std::string name;
 
-    String path;
+    std::string path;
 
     bool isDirectory;
 

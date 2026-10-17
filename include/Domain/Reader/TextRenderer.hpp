@@ -19,12 +19,12 @@ public:
     void SetFont(ReaderFont font);
 
     std::vector<WrappedLine> WrapDocument(
-        const String &text,
+        const std::string &text,
         int maxWidth);
 
 private:
     std::vector<WrappedLine> WrapText(
-        const String &text,
+        const std::string &text,
         size_t paragraphOffset,
         int maxWidth);
 

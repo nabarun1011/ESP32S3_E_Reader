@@ -1,5 +1,7 @@
 #include "UI/Screens/ReaderScreen.hpp"
 
+static const char *TAG = "ReaderScreen";
+
 ReaderScreen::ReaderScreen(
     IStorage &storage,
     TextDocument &document,
@@ -31,6 +33,7 @@ ReaderScreen::ReaderScreen(
 
 void ReaderScreen::Enter()
 {
+    Serial.printf("%s : Enter\n", TAG);
     auto file = m_storage.Open(m_currentBook.path, FileMode::Read);
 
     if (!file)
@@ -47,11 +50,12 @@ void ReaderScreen::Enter()
     GoToPage(m_readerSettings.CurrentPage);
 
     Refresh(true);
-}
 
+}
 
 void ReaderScreen::ApplyReaderSettings()
 {
+
     if (m_readerSettings.CurrentPage < m_pageStarts.size())
     {
         m_bookSettings.LastCharacterOffset = m_pageStarts[m_readerSettings.CurrentPage].characterOffset;
@@ -64,11 +68,13 @@ void ReaderScreen::ApplyReaderSettings()
 
     m_wrappedLines = m_renderer.WrapDocument(m_text, m_display.Width() - 20);
     RebuildPageIndex();
+
     m_readerSettings.CurrentPage = FindPageForOffset(m_bookSettings.LastCharacterOffset);
     if (m_readerSettings.CurrentPage > m_pageStarts.size() - 1)
     {
         m_readerSettings.CurrentPage = m_pageStarts.size() - 1;
     }
+
 }
 
 void ReaderScreen::Exit()
@@ -120,7 +126,8 @@ ScreenCommand ReaderScreen::HandleButton(Button button)
 
             break;
         case Button::Select:
-            ToggleOverlayMenu();
+            Serial.printf("%s : Select\n", TAG);
+            m_overlay.Show();
             break;
         case Button::Back:
             return {
@@ -146,7 +153,11 @@ void ReaderScreen::RebuildPageIndex()
 
     while (true)
     {
+        Serial.printf("ContentHeight = %d\n", m_layout.ContentHeight);
+        Serial.printf("StartLine = %u\n", (unsigned)startLine);
         Page page = m_renderer.BuildPageFromLines(m_wrappedLines, startLine, m_layout.ContentHeight);
+        Serial.printf("Page lines = %u\n", (unsigned)page.Lines.size());
+        Serial.printf("Next start = %u\n", (unsigned)page.NextPageStartLine);
 
         if (page.Lines.empty())
         {
@@ -181,6 +192,8 @@ void ReaderScreen::RebuildPageIndex()
             (unsigned)m_pageStarts[i].startLine,
             (unsigned)m_pageStarts[i].characterOffset);
     }
+
+    Serial.printf("PageStarts after rebuild = %u\n", m_pageStarts.size());
 }
 
 size_t ReaderScreen::FindPageForOffset(size_t offset) const
@@ -203,25 +216,15 @@ size_t ReaderScreen::FindPageForOffset(size_t offset) const
     return page;
 }
 
-void ReaderScreen::ToggleOverlayMenu()
-{
-    if (m_overlay.IsVisible())
-    {
-        m_overlay.Hide();
-    }
-    else
-    {
-        m_overlay.Show();
-    }
-}
-
 void ReaderScreen::Draw()
 {
-    m_display.SetTextSize(m_bookSettings.FontSize);
 
+    // m_display.SetTextSize(m_bookSettings.FontSize);
+    // Serial.printf("%s : Set text size\n", TAG);
     Page page = m_renderer.BuildPageFromLines(m_wrappedLines, m_pageStarts[m_readerSettings.CurrentPage].startLine, m_layout.ContentHeight);
 
     DrawHeader(m_currentBook.title);
+
     DrawFooter();
 
     m_renderer.DrawPage(
@@ -232,15 +235,13 @@ void ReaderScreen::Draw()
     {
         m_overlay.Draw();
     }
+
 }
 
 void ReaderScreen::DrawFooter()
 {
-    String footer =
-        "Page " +
-        String(m_readerSettings.CurrentPage) +
-        " / " +
-        String(m_pageStarts.size() - 1);
+    std::string footer;
+    footer = "Page " + std::to_string(m_readerSettings.CurrentPage) + "/" + std::to_string(m_pageStarts.size() - 1);
 
     m_display.DrawText(
         10,

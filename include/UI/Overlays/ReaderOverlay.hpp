@@ -10,6 +10,7 @@
 #include "Domain/Settings/DeviceSettings.hpp"
 #include "Domain/Settings/ReaderSettings.hpp"
 #include "Domain/Reader/PageIndexedEntry.hpp"
+#include "UI/Components/Menu/Menu.hpp"
 
 class ReaderOverlay : public BaseOverlay
 {
@@ -24,27 +25,34 @@ public:
         std::vector<PageIndexedEntry> &pages);
 
     void Draw() override;
+    void DrawMenuRow(
+        const MenuItem &item,
+        bool selected,
+        int y);
 
     void HandleButton(Button button) override;
 
+    void Show() override;
+
 private:
-    void MenuUp();
-    void MenuDown();
     void MenuLeft();
     void MenuRight();
     void MenuSelect();
 
+    void BuildMenu();
     enum class OverlayMenuItem
     {
         FontSize,
         Font,
-        Rotation,
+        Orientation,
         GoToPage,
         Library,
         Resume,
 
         Count
     };
+    MenuItem GetMenuItem(OverlayMenuItem menuItem);
+    void UpdateMenuValues();
 
 private:
     IDisplay &m_display;
@@ -59,5 +67,8 @@ private:
 
     std::function<void(size_t)> m_goToPage;
 
+
     std::vector<PageIndexedEntry> &m_pages;
+
+    Menu m_menu;
 };

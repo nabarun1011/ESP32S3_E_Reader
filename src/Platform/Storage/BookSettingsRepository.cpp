@@ -6,14 +6,14 @@ BookSettingsRepository::BookSettingsRepository(
 {
 }
 
-String BookSettingsRepository::SettingsPath(
-    const String &bookPath) const
+std::string BookSettingsRepository::SettingsPath(
+    const std::string &bookPath) const
 {
     return bookPath + ".settings";
 }
 
 bool BookSettingsRepository::Save(
-    const String &bookPath,
+    const std::string &bookPath,
     const BookSettings &settings)
 {
     auto file =
@@ -57,7 +57,7 @@ bool BookSettingsRepository::Save(
 }
 
 bool BookSettingsRepository::Load(
-    const String &bookPath,
+    const std::string &bookPath,
     BookSettings &settings)
 {
     auto file =
